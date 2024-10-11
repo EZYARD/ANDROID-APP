@@ -17,42 +17,46 @@ fun ListingsScreen(listings: List<ListingComponent>) {
     // LazyColumn is used for scrolling
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         items(listings) { listing ->
-            ListingCard(listing = listing)
+            Listings(listing = listing)
         }
     }
 }
+
+/**
+ * Redundant, Listings.kt should do the same thing
+ * */
 
 // Composable function to display a single listing as a card
-@Composable
-fun ListingCard(listing: ListingComponent) {
-    Card(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
-        // Column arranges the listing information vertically
-        Column(modifier = Modifier.padding(16.dp)) {
-            // Load and display the image using Coil, an image loading library for Compose
-            Image(
-                // `rememberAsyncImagePainter` loads the image using the URL from `listing.picture`
-                painter = rememberAsyncImagePainter(model = listing.picture),
-                contentDescription = "Listing Image",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(150.dp) // Sets a fixed height for the image
-            )
-            Spacer(modifier = Modifier.height(8.dp)) // Adds vertical space between image and text
-
-            // Display listing details as text below the image
-            Text(text = "Owner: ${listing.owner}")
-            Text(text = "Address: ${listing.address}")
-            Text(text = "Date: ${listing.date}")
-            Text(text = "Price Range: ${listing.priceRange}")
-            Text(text = "Rating: ${listing.rating}")
-        }
-    }
-}
+//@Composable
+//fun ListingCard(listing: ListingComponent) {
+//    Card(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+//        // Column arranges the listing information vertically
+//        Column(modifier = Modifier.padding(16.dp)) {
+//            // Load and display the image using Coil, an image loading library for Compose
+//            Image(
+//                // `rememberAsyncImagePainter` loads the image using the URL from `listing.picture`
+//                painter = rememberAsyncImagePainter(model = listing.picture),
+//                contentDescription = "Listing Image",
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .height(150.dp) // Sets a fixed height for the image
+//            )
+//            Spacer(modifier = Modifier.height(8.dp)) // Adds vertical space between image and text
+//
+//            // Display listing details as text below the image
+//            Text(text = "Owner: ${listing.owner}")
+//            Text(text = "Address: ${listing.address}")
+//            Text(text = "Date: ${listing.date}")
+//            Text(text = "Price Range: ${listing.priceRange}")
+//            Text(text = "Rating: ${listing.rating}")
+//        }
+//    }
+//}
 
 //////////////////HARDCODED STUFF/////////////////////
 
 
-//
+
 //@Composable
 //fun MainScreen() {
 //    val tempListings = getListings()

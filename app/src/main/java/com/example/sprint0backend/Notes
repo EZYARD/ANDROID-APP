@@ -1,0 +1,9 @@
+By default, the code attempts to connect to the backend
+
+to disable/enable this, go to:
+
+-> MainActivity
+    - Comment Everything Below MainActivity Class
+
+-> ListingsComponent
+    - on 'val picture: String', switch String to Int

@@ -27,7 +27,7 @@ fun Listings(listing: ListingComponent) {
         Column(modifier = Modifier.padding(8.dp)) {
             Image(
                 painter = rememberAsyncImagePainter(model = listing.picture), // Loads image from url
-                // painter = painterResource(id = listing.picture),         // Alternative way to use local image
+                //painter = painterResource(id = listing.picture),         // Alternative way to use local image
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxWidth() // Image fills the width of the card
@@ -41,11 +41,11 @@ fun Listings(listing: ListingComponent) {
             // The Following were used for hardcoded listings
 
             // Display listing details as text below the image
-//            Text(text = "Owner: ${listing.owner}", style = MaterialTheme.typography.bodyMedium)
-//            Text(text = "Address: ${listing.address}")
-//            Text(text = "Date: ${listing.date}")
-//            Text(text = "Price Range: ${listing.priceRange}")
-//            Text(text = "Rating: ${listing.rating}")
+            Text(text = "Owner: ${listing.owner}", style = MaterialTheme.typography.bodyMedium)
+            Text(text = "Address: ${listing.address}")
+            Text(text = "Date: ${listing.date}")
+            Text(text = "Price Range: ${listing.priceRange}")
+            Text(text = "Rating: ${listing.rating}")
         }
     }
 }
