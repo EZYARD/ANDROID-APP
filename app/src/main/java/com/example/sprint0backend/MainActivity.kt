@@ -18,84 +18,85 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            Sprint0BackendTheme {
+            Surface(color = MaterialTheme.colorScheme.background) {
                 MainScreen()
             }
         }
     }
 }
-
-@Preview
-@Composable
-fun MainScreen() {
-    // State to hold the listings data fetched from the API
-    var listings by remember { mutableStateOf<List<ListingComponent>>(emptyList()) }
-    // State to manage loading status
-    var isLoading by remember { mutableStateOf(true) }
-    // State to hold any error messages
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-
-    // Fetch data from the API when the composable is launched
-    // `LaunchedEffect(Unit)` ensures that the API call is made only once when the composable is first displayed
-    LaunchedEffect(Unit) {
-        RetrofitInstance.api.getListings().enqueue(object : Callback<List<ListingComponent>> {
-            // Handles successful response from the server
-            override fun onResponse(
-                call: Call<List<ListingComponent>>,
-                response: Response<List<ListingComponent>>
-            ) {
-                if (response.isSuccessful) {
-                    // Update the listings state with the fetched data
-                    listings = response.body() ?: emptyList()
-                    isLoading = false
-                } else {
-                    // Set error message if response is not successful
-                    errorMessage = "Failed to load data: ${response.errorBody()}"
-                    isLoading = false
-                }
-            }
-
-            // Handles failure of the network call
-            override fun onFailure(call: Call<List<ListingComponent>>, t: Throwable) {
-                // Set error message if there's a network failure
-                errorMessage = "Network error: ${t.message}"
-                isLoading = false
-            }
-        })
-    }
-
-    //  basic structure to manage the visual components (UI layout)
-    Scaffold(
-        content = { paddingValues ->
-            // Display different content based on the current state (loading, error, or display listings)
-            when {
-                isLoading -> {
-                    // Display a circular loading spinner while the data is being fetched
-                    CircularProgressIndicator(modifier = Modifier.fillMaxSize())
-                }
-                errorMessage != null -> {
-                    // Display an error message if the network call failed or the response was not successful
-                    Text(
-                        text = errorMessage!!,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(paddingValues)
-                    )
-                }
-                else -> {
-                    // Display the list of listings once the data has been successfully fetched
-                    ListingsScreen(listings = listings)
-                }
-            }
-        }
-    )
-}
+//
+//@Preview
+//@Composable
+//fun MainScreen() {
+//    // State to hold the listings data fetched from the API
+//    var listings by remember { mutableStateOf<List<ListingComponent>>(emptyList()) }
+//    // State to manage loading status
+//    var isLoading by remember { mutableStateOf(true) }
+//    // State to hold any error messages
+//    var errorMessage by remember { mutableStateOf<String?>(null) }
+//
+//    // Fetch data from the API when the composable is launched
+//    // `LaunchedEffect(Unit)` ensures that the API call is made only once when the composable is first displayed
+//    LaunchedEffect(Unit) {
+//        RetrofitInstance.api.getListings().enqueue(object : Callback<List<ListingComponent>> {
+//            // Handles successful response from the server
+//            override fun onResponse(
+//                call: Call<List<ListingComponent>>,
+//                response: Response<List<ListingComponent>>
+//            ) {
+//                if (response.isSuccessful) {
+//                    // Update the listings state with the fetched data
+//                    listings = response.body() ?: emptyList()
+//                    isLoading = false
+//                } else {
+//                    // Set error message if response is not successful
+//                    errorMessage = "Failed to load data: ${response.errorBody()}"
+//                    isLoading = false
+//                }
+//            }
+//
+//            // Handles failure of the network call
+//            override fun onFailure(call: Call<List<ListingComponent>>, t: Throwable) {
+//                // Set error message if there's a network failure
+//                errorMessage = "Network error: ${t.message}"
+//                isLoading = false
+//            }
+//        })
+//    }
+//
+//    //  basic structure to manage the visual components (UI layout)
+//    Scaffold(
+//        content = { paddingValues ->
+//            // Display different content based on the current state (loading, error, or display listings)
+//            when {
+//                isLoading -> {
+//                    // Display a circular loading spinner while the data is being fetched
+//                    CircularProgressIndicator(modifier = Modifier.fillMaxSize())
+//                }
+//                errorMessage != null -> {
+//                    // Display an error message if the network call failed or the response was not successful
+//                    Text(
+//                        text = errorMessage!!,
+//                        modifier = Modifier
+//                            .fillMaxSize()
+//                            .padding(paddingValues)
+//                    )
+//                }
+//                else -> {
+//                    // Display the list of listings once the data has been successfully fetched
+//                    ListingsScreen(listings = listings)
+//                }
+//            }
+//        }
+//    )
+//}
 
 //********************************DEFAULT STUFF**************************************//
 
