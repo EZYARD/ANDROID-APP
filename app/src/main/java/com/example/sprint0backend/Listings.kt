@@ -26,8 +26,11 @@ fun Listings(listing: ListingComponent) {
         // Column to stack listing content vertically
         Column(modifier = Modifier.padding(8.dp)) {
             Image(
+                /**
+                 * Switch between 'painter' to use your own local images or to connect to backend images
+                 * */
                 painter = rememberAsyncImagePainter(model = listing.picture), // Loads image from url
-                //painter = painterResource(id = listing.picture),         // Alternative way to use local image
+                //painter = painterResource(id = listing.picture),         // use local images
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxWidth() // Image fills the width of the card
