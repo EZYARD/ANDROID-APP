@@ -6,4 +6,7 @@ to disable/enable this, go to:
     - Comment Everything Below MainActivity Class
 
 -> ListingsComponent
-    - on 'val picture: String', switch String to Int
+    - on 'val picture:', switch String to Int (String = backend, Int = local)
+
+-> Listings.kt
+    - Switch picture mode for backend/local
