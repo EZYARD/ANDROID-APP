@@ -3,36 +3,83 @@ package com.example.sprint0backend
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import coil.compose.rememberAsyncImagePainter
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import androidx.navigation.NavHostController
 
+//@Preview
 @Composable
-fun ListingsScreen(listings: List<ListingComponent>) {
-    // LazyColumn is used for scrolling
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
-        items(listings) { listing ->
-            Listings(listing = listing)
+fun ListingsScreen(navController: NavHostController) {
+    var listings by remember { mutableStateOf<List<ListingComponent>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(Unit) {
+        // Get backend listings //////////////////////////////////////
+
+//        RetrofitInstance.api.getListings().enqueue(object : Callback<List<ListingComponent>> {
+//            override fun onResponse(
+//                call: Call<List<ListingComponent>>,
+//                response: Response<List<ListingComponent>>
+//            ) {
+//                if (response.isSuccessful) {
+//                    val body = response.body()
+//                    if (body != null) {
+//                        listings = body
+//                    }
+//                    else {
+//                        listings = emptyList()
+//                    }
+//                } else {
+//                    errorMessage = "Failed to load data: ${response.errorBody()}"
+//                }
+//                isLoading = false
+//            }
+//
+//            override fun onFailure(call: Call<List<ListingComponent>>, t: Throwable) {
+//                errorMessage = "Network error: ${t.message}"
+//                isLoading = false
+//            }
+//        })
+
+        // end of backend listings //////////////////////////////////////
+
+        // get hardcoded listings //////////////////////////////////////
+
+        listings = listings + getHardcodedListings()
+        isLoading = false
+
+        // end of hardcoded listings //////////////////////////////////////
+    }
+
+    // Display loading indicator, error message, or listings based on the state
+    if (isLoading) {
+        CircularProgressIndicator(modifier = Modifier.fillMaxSize())
+    } else if (errorMessage != null) {
+        Text(text = errorMessage!!, modifier = Modifier.fillMaxSize())
+    } else {
+        // Display the listings (hardcoded or backend) in a LazyColumn
+        LazyColumn(modifier = Modifier.fillMaxSize()) {
+            items(listings) { listing ->
+                Listings(listing = listing, navController = navController)
+            }
         }
     }
 }
 
 //////////////////HARDCODED STUFF/////////////////////
 
-
-
-@Composable
-fun MainScreen() {
-    val tempListings = getListings()
-    ListingsScreen(listings = tempListings)
-}
-
-fun getListings(): List <ListingComponent> {
+fun getHardcodedListings(): List <ListingComponent> {
     return listOf(
         // the following is hard coded info for testing purposes
         ListingComponent(
@@ -67,9 +114,4 @@ fun getListings(): List <ListingComponent> {
         // end of testing info
         )
     )
-}
-@Preview
-@Composable
-fun PreviewListingsScreen() {
-    MainScreen()
 }

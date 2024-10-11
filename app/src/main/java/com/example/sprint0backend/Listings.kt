@@ -10,17 +10,20 @@ import androidx.compose.material3.*
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import coil.compose.rememberAsyncImagePainter
+import androidx.navigation.NavHostController
 
 /*
 * Creates a card for each listing made and displays it on main screen
 */
 @Composable
-fun Listings(listing: ListingComponent) {
+fun Listings(listing: ListingComponent, navController: NavHostController) {
     Card(
         modifier = Modifier
             .fillMaxWidth() // Makes the card fill the width of the screen
             .padding(8.dp) // Adds padding around the card
-            .clickable { /* Placeholder clicking ability */ },
+            .clickable {
+                navController.navigate("OwnerListingScreen/${listing.owner}")
+            },
         elevation = CardDefaults.cardElevation(4.dp) // Adds elevation for shadow effect
     ) {
         // Column to stack listing content vertically
@@ -40,8 +43,6 @@ fun Listings(listing: ListingComponent) {
 
             // Adds vertical space between the image and text (no overlapping)
             Spacer(modifier = Modifier.height(8.dp))
-
-            // The Following were used for hardcoded listings
 
             // Display listing details as text below the image
             Text(text = "Owner: ${listing.owner}", style = MaterialTheme.typography.bodyMedium)
