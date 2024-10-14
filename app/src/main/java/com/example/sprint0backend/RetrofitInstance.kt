@@ -8,6 +8,13 @@ import retrofit2.converter.gson.GsonConverterFactory
 object RetrofitInstance {
     private val retrofit by lazy {
         Retrofit.Builder()
+            /**
+             * Change the url to other backend source if needed
+             *
+             * *Only for displaying data from there*
+             * not necessary for hard-coded listings
+             *
+             * */
             .baseUrl("http://10.0.2.2:8000")
 
             // conversion between Kotlin objects and the API responses
