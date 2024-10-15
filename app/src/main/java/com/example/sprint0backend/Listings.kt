@@ -22,7 +22,7 @@ fun Listings(listing: ListingComponent, navController: NavHostController) {
             .fillMaxWidth() // Makes the card fill the width of the screen
             .padding(8.dp) // Adds padding around the card
             .clickable {
-                navController.navigate("OwnerListingScreen/${listing.owner}")
+                navController.navigate("OwnerListingScreen/${listing.id}")
             },
         elevation = CardDefaults.cardElevation(4.dp) // Adds elevation for shadow effect
     ) {

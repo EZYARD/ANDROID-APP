@@ -5,9 +5,9 @@ data class ListingComponent(
     val id: Int,     // Unique identifier for each listing
     val owner: String,
     val address: String,
-    val picture: List<String>,   /*List<Int>,*/     // Multiple pictures uses List
+    val picture: /*String,*/ Int,   /*List<Int>,*/     // Multiple pictures uses List
     val date: String,
-    val tags: String,
+    val tags: List<String>,
     val priceRange: String,
     val rating: Float
 )
