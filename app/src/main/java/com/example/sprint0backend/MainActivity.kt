@@ -89,6 +89,7 @@ fun MainApp() {
 
             if (selectedListing != null) {
                 // Pass the selected listing to the OwnerListingScreen
+
                 OwnerListingScreen(listing = selectedListing, navController = navController)
             } else {
                 // Show error message or fallback
