@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -39,20 +39,20 @@ fun OwnerListingScreen(listing: ListingComponent, navController: NavHostControll
                 .padding(16.dp) // Adds padding around the details
         ) {
             // Display listing image if available
-            Image(
-                painter = rememberAsyncImagePainter(model = listing.picture), // Use local or URL
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(250.dp),
-                contentScale = ContentScale.Crop
-            )
+//            Image(
+//                painter = rememberAsyncImagePainter(model = listing.picture), // Use image URL
+//                contentDescription = null,
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .height(250.dp),
+//                contentScale = ContentScale.Crop
+//            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
             // Display the listing details with larger font
             Text(
-                text = "Owner: ${listing.owner}",
+                text = "Name: ${listing.name}",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.bodyLarge
@@ -60,14 +60,21 @@ fun OwnerListingScreen(listing: ListingComponent, navController: NavHostControll
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Address: ${listing.address}",
+                text = "Owner: ${listing.name}", // If owner is available in your data
                 fontSize = 20.sp,
                 style = MaterialTheme.typography.bodyMedium
             )
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Date: ${listing.date}",
+                text = "Address: ${listing.streetNumber} ${listing.streetName}, ${listing.city}, ${listing.state} ${listing.zipcode}",
+                fontSize = 20.sp,
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "Date: ${listing.startTime} - ${listing.endTime}", // Assuming startTime and endTime are relevant for this field
                 fontSize = 20.sp,
                 style = MaterialTheme.typography.bodyMedium
             )
@@ -100,6 +107,15 @@ fun OwnerListingScreen(listing: ListingComponent, navController: NavHostControll
                     Text(text = "- $tag", fontSize = 18.sp)
                 }
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Display the listing description
+            Text(
+                text = "Description: ${listing.description}",
+                fontSize = 18.sp,
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
     }
 }

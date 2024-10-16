@@ -82,7 +82,15 @@ fun MainApp() {
 //            }
 
             // Uncomment this for hardcoded data:
-            var listings = getHardcodedListings()
+            var listings : List<ListingComponent> = emptyList();
+            BackendWrapper.getListings(
+                onSuccess = { backendListings ->
+                    listings = backendListings
+                },
+                onError = { error ->
+                    errorMessage = error
+                }
+            )
 
             // Check if listings have been loaded and if the selected listing exists
             val selectedListing = listings.find { it.id == listingId }
