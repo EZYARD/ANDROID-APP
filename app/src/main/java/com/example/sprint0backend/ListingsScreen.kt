@@ -26,40 +26,24 @@ fun ListingsScreen(navController: NavHostController) {
 
     LaunchedEffect(Unit) {
         // Get backend listings //////////////////////////////////////
-
-//        RetrofitInstance.api.getListings().enqueue(object : Callback<List<ListingComponent>> {
-//            override fun onResponse(
-//                call: Call<List<ListingComponent>>,
-//                response: Response<List<ListingComponent>>
-//            ) {
-//                if (response.isSuccessful) {
-//                    val body = response.body()
-//                    if (body != null) {
-//                        listings = body
-//                    }
-//                    else {
-//                        listings = emptyList()
-//                    }
-//                } else {
-//                    errorMessage = "Failed to load data: ${response.errorBody()}"
-//                }
+//                getBackendListings(
+//            onSuccess = { backendListings ->
+//                listings = backendListings
+//                isLoading = false
+//            },
+//            onError = { error ->
+//                errorMessage = error
 //                isLoading = false
 //            }
-//
-//            override fun onFailure(call: Call<List<ListingComponent>>, t: Throwable) {
-//                errorMessage = "Network error: ${t.message}"
-//                isLoading = false
-//            }
-//        })
+//        )
+        // end of backend listings ///////////////////////////////////
 
-        // end of backend listings //////////////////////////////////////
-
-        // get hardcoded listings //////////////////////////////////////
+        // get hardcoded listings ////////////////////////////////////
 
         listings = listings + getHardcodedListings()
         isLoading = false
 
-        // end of hardcoded listings //////////////////////////////////////
+        // end of hardcoded listings /////////////////////////////////
     }
 
     // Display loading indicator, error message, or listings based on the state
@@ -77,6 +61,34 @@ fun ListingsScreen(navController: NavHostController) {
     }
 }
 
+fun getBackendListings(
+    onSuccess: (List<ListingComponent>) -> Unit,
+    onError: (String) -> Unit
+) {
+    RetrofitInstance.api.getListings().enqueue(object : Callback<List<ListingComponent>> {
+        override fun onResponse(
+            call: Call<List<ListingComponent>>,
+            response: Response<List<ListingComponent>>
+        ) {
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null) {
+                    onSuccess(body)
+                } else {
+                    onSuccess(emptyList())
+                }
+            } else {
+                onError("Failed to load data: ${response.errorBody()}")
+            }
+        }
+
+        override fun onFailure(call: Call<List<ListingComponent>>, t: Throwable) {
+            onError("Network error: ${t.message}")
+        }
+    })
+}
+
+/////////////////FOR TEST USE ONLY/////////////////////
 //////////////////HARDCODED STUFF/////////////////////
 
 fun getHardcodedListings(): List <ListingComponent> {
