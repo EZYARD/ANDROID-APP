@@ -9,6 +9,23 @@ data class ImageResponse(
     val download_url: String
 )
 
+data class ListingComponent(
+    val id: Int,
+    val name: String,
+    val description: String,
+    val city: String,
+    val state: String,
+    val zipcode: Int,
+    val streetNumber: String,
+    val streetName: String,
+    val tags: String,
+    val priceRange: Int,
+    val rating: Float,
+    val startTime: String,
+    val endTime: String,
+    val reviews: String
+)
+
 // Interface to define API endpoints for Retrofit
 interface BackendSchema {
 

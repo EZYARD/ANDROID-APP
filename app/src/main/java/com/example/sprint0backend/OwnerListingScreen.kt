@@ -1,12 +1,13 @@
-package com.example.sprint0backend
-
 import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -14,11 +15,39 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
+import com.example.sprint0backend.BackendWrapper
+import com.example.sprint0backend.ListingComponent
+import kotlinx.coroutines.launch
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import com.example.sprint0backend.R
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OwnerListingScreen(listing: ListingComponent, navController: NavHostController) {
+    var imageUrls by remember { mutableStateOf<List<String>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(listing.id) {
+        coroutineScope.launch {
+            BackendWrapper.getImageUrlsForListing(
+                listing.id,
+                onSuccess = { urls ->
+                    imageUrls = urls
+                    isLoading = false
+                },
+                onError = { error ->
+                    errorMessage = error
+                    isLoading = false
+                }
+            )
+        }
+    }
+
     // Scaffold to hold the back button in the top bar
     Scaffold(
         topBar = {
@@ -31,91 +60,130 @@ fun OwnerListingScreen(listing: ListingComponent, navController: NavHostControll
                 }
             )
         }
-    ) {
-        // Display detailed information about the selected listing
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp) // Adds padding around the details
-        ) {
-            // Display listing image if available
-//            Image(
-//                painter = rememberAsyncImagePainter(model = listing.picture), // Use image URL
-//                contentDescription = null,
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .height(250.dp),
-//                contentScale = ContentScale.Crop
-//            )
+    ) { paddingValues ->
+        if (isLoading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        } else if (errorMessage != null) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(text = errorMessage!!)
+            }
+        } else {
+            // Display detailed information about the selected listing
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp)
+                ) {
+                    // Image Carousel
+                    if (imageUrls.isNotEmpty()) {
+                        LazyRow(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(250.dp)
+                        ) {
+                            items(imageUrls) { imageUrl ->
+                                Box(
+                                    modifier = Modifier
+                                        .padding(4.dp)
+                                        .fillMaxHeight()
+                                        .width(300.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Image(
+                                        painter = rememberAsyncImagePainter(
+                                            model = imageUrl,
+                                            error = painterResource(R.drawable.placeholder), // Optional placeholder
+                                            placeholder = painterResource(R.drawable.placeholder) // Optional placeholder
+                                        ),
+                                        contentDescription = null,
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        // Display a placeholder if there are no images
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(250.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(text = "No images available")
+                        }
+                    }
 
-            Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-            // Display the listing details with larger font
-            Text(
-                text = "Name: ${listing.name}",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.bodyLarge
-            )
-            Spacer(modifier = Modifier.height(16.dp))
+                    // Display the listing details with larger font
+                    Text(
+                        text = "Name: ${listing.name}",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                text = "Owner: ${listing.name}", // If owner is available in your data
-                fontSize = 20.sp,
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Address: ${listing.streetNumber} ${listing.streetName}, ${listing.city}, ${listing.state} ${listing.zipcode}",
+                        fontSize = 20.sp,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                text = "Address: ${listing.streetNumber} ${listing.streetName}, ${listing.city}, ${listing.state} ${listing.zipcode}",
-                fontSize = 20.sp,
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Date: ${listing.startTime} - ${listing.endTime}",
+                        fontSize = 20.sp,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                text = "Date: ${listing.startTime} - ${listing.endTime}", // Assuming startTime and endTime are relevant for this field
-                fontSize = 20.sp,
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Price Range: ${listing.priceRange}",
+                        fontSize = 20.sp,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                text = "Price Range: ${listing.priceRange}",
-                fontSize = 20.sp,
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Rating: ${listing.rating}",
+                        fontSize = 20.sp,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
 
-            Text(
-                text = "Rating: ${listing.rating}",
-                fontSize = 20.sp,
-                style = MaterialTheme.typography.bodyMedium
-            )
+                    Spacer(modifier = Modifier.height(24.dp))
 
-            Spacer(modifier = Modifier.height(24.dp))
+                    // Display tags if available
+                    if (listing.tags.isNotEmpty()) {
+                        Text(
+                            text = "Categories:",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        listing.tags.split(",").forEach { tag ->
+                            Text(text = "- $tag", fontSize = 18.sp)
+                        }
+                    }
 
-            // Display tags if available
-            if (listing.tags.isNotEmpty()) {
-                Text(
-                    text = "Categories:",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                listing.tags.forEach { tag ->
-                    Text(text = "- $tag", fontSize = 18.sp)
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Display the listing description
+                    Text(
+                        text = "Description: ${listing.description}",
+                        fontSize = 18.sp,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 }
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Display the listing description
-            Text(
-                text = "Description: ${listing.description}",
-                fontSize = 18.sp,
-                style = MaterialTheme.typography.bodyMedium
-            )
         }
     }
 }

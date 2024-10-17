@@ -1,5 +1,6 @@
 package com.example.sprint0backend
 
+import OwnerListingScreen
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -8,6 +9,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -33,8 +35,9 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainApp() {
     val navController = rememberNavController()
+    var listings by rememberSaveable { mutableStateOf<List<ListingComponent>>(emptyList()) }
 
-    NavHost(navController = navController, startDestination = "ListingsScreen"){
+    NavHost(navController = navController, startDestination = "ListingsScreen") {
         composable("ListingsScreen") {
             ListingsScreen(navController = navController)
         }
@@ -55,34 +58,17 @@ fun MainApp() {
             }
 
             // Try to convert listingIdString to an integer
-            if (listingIdString.isNotEmpty()) {
+            listingId = if (listingIdString.isNotEmpty()) {
                 try {
-                    listingId = listingIdString.toInt()  // Convert the string to an integer
+                    listingIdString.toInt()  // Convert the string to an integer
                 } catch (e: NumberFormatException) {
-                    listingId = -1  // Set default value if conversion fails
+                    -1  // Set default value if conversion fails
                 }
             } else {
-                listingId = -1  // return if no listings exist
+                -1  // return if no listings exist
             }
             var errorMessage by remember { mutableStateOf<String?>(null) }
-            // Variables for listing and loading/error states
-//            var listings by remember { mutableStateOf<List<ListingComponent>>(emptyList()) }
-//
-//
-//            // Uncomment for backend data:
-//            LaunchedEffect(Unit) {
-//                getBackendListings(
-//                    onSuccess = { backendListings ->
-//                        listings = backendListings
-//                    },
-//                    onError = { error ->
-//                        errorMessage = error
-//                    }
-//                )
-//            }
 
-            // Uncomment this for hardcoded data:
-            var listings : List<ListingComponent> = emptyList();
             BackendWrapper.getListings(
                 onSuccess = { backendListings ->
                     listings = backendListings

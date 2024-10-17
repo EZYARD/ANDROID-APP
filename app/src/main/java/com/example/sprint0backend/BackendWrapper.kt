@@ -56,7 +56,7 @@ class BackendWrapper {
             makeCall(
                 call = RetrofitInstance.api.getListingImages(listingId),
                 transform = { body ->
-                    body?.map { image -> "https://backend-u2v1.onrender.com${image.download_url}" }
+                    body?.map { image -> "${Constants().BACKEND_URL.dropLast(1)}${image.download_url}" }
                         ?: emptyList()
                 },
                 onSuccess = onSuccess,
