@@ -1,17 +1,24 @@
 package com.example.sprint0backend
 
+import OwnerListingScreen
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.runtime.*
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.compose.ui.Modifier
 
 
 class MainActivity : ComponentActivity() {
@@ -33,8 +40,9 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainApp() {
     val navController = rememberNavController()
+    var listings by rememberSaveable { mutableStateOf<List<ListingComponent>>(emptyList()) }
 
-    NavHost(navController = navController, startDestination = "ListingsScreen"){
+    NavHost(navController = navController, startDestination = "ListingsScreen") {
         composable("ListingsScreen") {
             ListingsScreen(navController = navController)
         }
@@ -55,34 +63,25 @@ fun MainApp() {
             }
 
             // Try to convert listingIdString to an integer
-            if (listingIdString.isNotEmpty()) {
+            listingId = if (listingIdString.isNotEmpty()) {
                 try {
-                    listingId = listingIdString.toInt()  // Convert the string to an integer
+                    listingIdString.toInt()  // Convert the string to an integer
                 } catch (e: NumberFormatException) {
-                    listingId = -1  // Set default value if conversion fails
+                    -1  // Set default value if conversion fails
                 }
             } else {
-                listingId = -1  // return if no listings exist
+                -1  // return if no listings exist
             }
             var errorMessage by remember { mutableStateOf<String?>(null) }
-            // Variables for listing and loading/error states
-//            var listings by remember { mutableStateOf<List<ListingComponent>>(emptyList()) }
-//
-//
-//            // Uncomment for backend data:
-//            LaunchedEffect(Unit) {
-//                getBackendListings(
-//                    onSuccess = { backendListings ->
-//                        listings = backendListings
-//                    },
-//                    onError = { error ->
-//                        errorMessage = error
-//                    }
-//                )
-//            }
 
-            // Uncomment this for hardcoded data:
-            var listings = getHardcodedListings()
+            BackendWrapper.getListings(
+                onSuccess = { backendListings ->
+                    listings = backendListings
+                },
+                onError = { error ->
+                    errorMessage = error
+                }
+            )
 
             // Check if listings have been loaded and if the selected listing exists
             val selectedListing = listings.find { it.id == listingId }

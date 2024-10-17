@@ -5,7 +5,7 @@ to disable/enable this, go to:
 -> ListingsComponent
     - on 'val picture:', switch String to Int (String = backend, Int = local)
 
--> Listings.kt
+-> com.example.sprint0backend.Listings.kt
     - Switch picture mode for backend/local
 
 -> ListingsScreen

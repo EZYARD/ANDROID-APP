@@ -3,28 +3,16 @@ package com.example.sprint0backend
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-// Singleton object for creating and managing Retrofit instance
-// Helps connect to FastAPI data
+// Retrofit is a type-safe HTTP client for Android for us to call our backend API
 object RetrofitInstance {
     private val retrofit by lazy {
         Retrofit.Builder()
-            /**
-             * Change the url to other backend source if needed
-             *
-             * *Only for displaying data from there*
-             * not necessary for hard-coded listings
-             *
-             * */
-            .baseUrl("http://10.0.2.2:8000")
-
-            // conversion between Kotlin objects and the API responses
+            .baseUrl(Constants().BACKEND_URL)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
 
-    // Lazy initialization of the API interface
-    // This is where the Retrofit instance is used to create the implementation of the API endpoints
-    val api: ListingBackend by lazy {
-        retrofit.create(ListingBackend::class.java)
+    val api: BackendSchema by lazy {
+        retrofit.create(BackendSchema::class.java)
     }
 }
