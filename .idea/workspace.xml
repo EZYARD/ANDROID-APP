@@ -9,20 +9,14 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2f1f7523-c98b-4abc-9cd3-86e8167c5083" name="Changes" comment="Helper backend functions, new api calls, new data calls, etc.">
-      <change afterPath="$PROJECT_DIR$/app/src/main/res/drawable/placeholder.png" afterDir="false" />
+    <list default="true" id="2f1f7523-c98b-4abc-9cd3-86e8167c5083" name="Changes" comment="pull from BE, image carosel">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/app/build.gradle.kts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/androidTest/java/com/example/sprint0backend/ExampleInstrumentedTest.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/sprint0backend/BackendSchema.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/sprint0backend/BackendSchema.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/sprint0backend/BackendWrapper.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/sprint0backend/BackendWrapper.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/sprint0backend/Constants.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/sprint0backend/Constants.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/sprint0backend/ListingComponent.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/sprint0backend/Listings.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/sprint0backend/Listings.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/sprint0backend/ListingsScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/sprint0backend/ListingsScreen.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/sprint0backend/MainActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/sprint0backend/MainActivity.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/sprint0backend/Notes" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/sprint0backend/Notes" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/sprint0backend/OwnerListingScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/sprint0backend/OwnerListingScreen.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/res/xml/network_security_config.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/xml/network_security_config.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/test/java/com/example/sprint0backend/ExampleUnitTest.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/sprint0backend/ui/theme/Theme.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/sprint0backend/ui/theme/Theme.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -258,7 +252,15 @@
       <option name="project" value="LOCAL" />
       <updated>1729120418597</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="pull from BE, image carosel">
+      <option name="closed" value="true" />
+      <created>1729127766237</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1729127766237</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -272,7 +274,7 @@
                   <entry key="branch">
                     <value>
                       <list>
-                        <option value="develop" />
+                        <option value="feature/integration" />
                       </list>
                     </value>
                   </entry>
@@ -289,6 +291,7 @@
     <MESSAGE value="Display address, time, date, distance, and the categories of the listing in a more expanded format" />
     <MESSAGE value="changes to MainActivity.kt" />
     <MESSAGE value="Helper backend functions, new api calls, new data calls, etc." />
-    <option name="LAST_COMMIT_MESSAGE" value="Helper backend functions, new api calls, new data calls, etc." />
+    <MESSAGE value="pull from BE, image carosel" />
+    <option name="LAST_COMMIT_MESSAGE" value="pull from BE, image carosel" />
   </component>
 </project>
