@@ -68,9 +68,9 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.androidx.navigation.compose)
-    implementation("io.coil-kt:coil:2.7.0") // If not already added for Coil
-    implementation("io.coil-kt:coil-compose:1.3.2")
-    implementation("androidx.datastore:datastore-preferences:1.1.1") // For handling local storage
+    implementation(libs.coil) // If not already added for Coil
+    implementation(libs.coil.compose.v132)
+    implementation(libs.androidx.datastore.preferences) // For handling local storage
 
 
     // Retrofit dependencies for backend
