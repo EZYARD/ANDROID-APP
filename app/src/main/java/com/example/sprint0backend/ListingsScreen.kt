@@ -49,4 +49,5 @@ fun ListingsScreen(navController: NavHostController) {
             }
         }
     }
+
 }

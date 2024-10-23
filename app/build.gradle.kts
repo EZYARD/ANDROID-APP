@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace = "com.example.sprint0backend"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.sprint0backend"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -60,6 +60,8 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.runtime.ktx)
+    implementation(libs.androidx.storage)
+    implementation(libs.androidx.storage)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -71,6 +73,11 @@ dependencies {
     implementation("io.coil-kt:coil:2.7.0") // If not already added for Coil
     implementation("io.coil-kt:coil-compose:1.3.2")
     implementation("androidx.datastore:datastore-preferences:1.1.1") // For handling local storage
+    //dependencies for log in
+    implementation("androidx.credentials:credentials:1.5.0-alpha06")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+    implementation("androidx.credentials:credentials-play-services-auth:1.5.0-alpha06")
+
 
 
     // Retrofit dependencies for backend
