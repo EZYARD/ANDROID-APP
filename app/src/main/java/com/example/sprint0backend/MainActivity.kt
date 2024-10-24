@@ -54,6 +54,9 @@ fun MainApp() {
         composable("SearchScreen") {
             SearchScreen(navController = navController)
         }
+        composable("ProfileScreen") {
+            ProfileScreen(navController = navController)
+        }
         composable("OwnerListingScreen/{listingId}") { backStackEntry ->
             // default values
             var listingIdString: String = ""
@@ -114,11 +117,12 @@ fun MainApp() {
  * */
 @Composable
 fun BottomNavigationBar(navController: NavHostController) {
+    val currentDestination = navController.currentDestination
     NavigationBar {
         NavigationBarItem(
             icon = { Icon(Icons.Default.Home, contentDescription = "Listings") },
             label = { Text("Listings") },
-            selected = navController.currentDestination?.route == "ListingsScreen",
+            selected = currentDestination != null && currentDestination.route == "ListingsScreen",
             onClick = {
                 navController.navigate("ListingsScreen") {
                     popUpTo(navController.graph.startDestinationId)
@@ -129,7 +133,7 @@ fun BottomNavigationBar(navController: NavHostController) {
         NavigationBarItem(
             icon = { Icon(Icons.Default.Search, contentDescription = "Search") },
             label = { Text("Search") },
-            selected = navController.currentDestination?.route == "SearchScreen",
+            selected = currentDestination != null && currentDestination.route == "SearchScreen",
             onClick = {
                 navController.navigate("SearchScreen") {
                     popUpTo(navController.graph.startDestinationId)
@@ -140,9 +144,12 @@ fun BottomNavigationBar(navController: NavHostController) {
         NavigationBarItem(
             icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
             label = { Text("Profile") },
-            selected = false, // nothing for now. a profile screen doesn't exist
+            selected = currentDestination != null && currentDestination.route == "ProfileScreen",
             onClick = {
-                // just for effects as of right now
+                navController.navigate("ProfileScreen") {
+                    popUpTo(navController.graph.startDestinationId)
+                    launchSingleTop = true
+                }
             }
         )
     }
