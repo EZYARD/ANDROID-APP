@@ -5,9 +5,10 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -16,6 +17,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -42,9 +44,18 @@ fun MainApp() {
     val navController = rememberNavController()
     var listings by rememberSaveable { mutableStateOf<List<ListingComponent>>(emptyList()) }
 
-    NavHost(navController = navController, startDestination = "ListingsScreen") {
+    Scaffold(
+        bottomBar = { BottomNavigationBar(navController) }
+    ) { innerPadding ->
+    NavHost(navController = navController, startDestination = "ListingsScreen", modifier = Modifier.padding(innerPadding)) {
         composable("ListingsScreen") {
             ListingsScreen(navController = navController)
+        }
+        composable("SearchScreen") {
+            SearchScreen(navController = navController)
+        }
+        composable("ProfileScreen") {
+            ProfileScreen(navController = navController)
         }
         composable("OwnerListingScreen/{listingId}") { backStackEntry ->
             // default values
@@ -95,5 +106,51 @@ fun MainApp() {
                 Text(text = errorMessage ?: "Loading...", modifier = Modifier.fillMaxSize())
             }
         }
+    }
+        }
+}
+
+/**
+ * This will add a navigation bar at the bottom of the screen
+ *
+ * For now, 'ListingsScreen' has the 'home' icon
+ * */
+@Composable
+fun BottomNavigationBar(navController: NavHostController) {
+    val currentDestination = navController.currentDestination
+    NavigationBar {
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Home, contentDescription = "Listings") },
+            label = { Text("Listings") },
+            selected = currentDestination != null && currentDestination.route == "ListingsScreen",
+            onClick = {
+                navController.navigate("ListingsScreen") {
+                    popUpTo(navController.graph.startDestinationId)
+                    launchSingleTop = true
+                }
+            }
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Search, contentDescription = "Search") },
+            label = { Text("Search") },
+            selected = currentDestination != null && currentDestination.route == "SearchScreen",
+            onClick = {
+                navController.navigate("SearchScreen") {
+                    popUpTo(navController.graph.startDestinationId)
+                    launchSingleTop = true
+                }
+            }
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
+            label = { Text("Profile") },
+            selected = currentDestination != null && currentDestination.route == "ProfileScreen",
+            onClick = {
+                navController.navigate("ProfileScreen") {
+                    popUpTo(navController.graph.startDestinationId)
+                    launchSingleTop = true
+                }
+            }
+        )
     }
 }
