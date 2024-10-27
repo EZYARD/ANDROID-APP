@@ -3,6 +3,8 @@ agp = "8.6.1"
 coilCompose = "2.7.0"
 coilComposeVersion = "2.7.0"
 datastorePreferences = "1.1.1"
+firebaseAuth = "23.1.0"
+firebaseBom = "33.5.1"
 kotlin = "1.9.0"
 coreKtx = "1.13.1"
 junit = "4.13.2"
@@ -13,6 +15,7 @@ activityCompose = "1.9.3"
 composeBom = "2024.10.00"
 navigationCompose = "2.8.3"
 navigationRuntimeKtx = "2.8.3"
+storage = "1.5.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -21,6 +24,9 @@ androidx-navigation-compose = { module = "androidx.navigation:navigation-compose
 coil = { module = "io.coil-kt:coil", version.ref = "coilCompose" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 coil-compose-v132 = { module = "io.coil-kt:coil-compose", version.ref = "coilComposeVersion" }
+firebase-analytics-ktx = { module = "com.google.frebase:firebase-analytics-ktx" }
+firebase-auth = { module = "com.google.firebase:firebase-auth", version.ref = "firebaseAuth" }
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -37,6 +43,7 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3" 
 retrofit = { module = "com.squareup.retrofit2:retrofit", version = "2.9.0" }
 retrofit-gson = { module = "com.squareup.retrofit2:converter-gson", version = "2.9.0" }
 androidx-navigation-runtime-ktx = { group = "androidx.navigation", name = "navigation-runtime-ktx", version.ref = "navigationRuntimeKtx" }
+androidx-storage = { group = "androidx.test.services", name = "storage", version.ref = "storage" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
