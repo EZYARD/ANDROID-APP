@@ -74,8 +74,15 @@ dependencies {
     implementation(libs.coil.compose.v132)
     implementation(libs.androidx.datastore.preferences) // For handling local storage
 
-    implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics.ktx)
+    implementation(platform(libs.firebase.bom)) //log in
+    implementation(libs.firebase.auth)
+
+
+
+
+
+
 
     // Retrofit dependencies for backend
     implementation(libs.retrofit)
