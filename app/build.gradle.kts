@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -73,6 +74,8 @@ dependencies {
     implementation(libs.coil.compose.v132)
     implementation(libs.androidx.datastore.preferences) // For handling local storage
 
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics.ktx)
 
     // Retrofit dependencies for backend
     implementation(libs.retrofit)
