@@ -129,13 +129,13 @@ fun Listings(listing: ListingComponent, navController: NavHostController) {
 
             // Display listing details as text below the image
             Text(text = "Name: ${listing.name}", style = MaterialTheme.typography.bodyMedium)
-            Text(text = "Description: ${listing.description}")
+            //Text(text = "Description: ${listing.description}")
             Text(text = "City: ${listing.city}, ${listing.state}")
             Text(text = "Street: ${listing.streetNumber} ${listing.streetName}, ${listing.zipcode}")
             Text(text = "Price Range: ${listing.priceRange}")
-            Text(text = "Rating: ${listing.rating}")
-            Text(text = "Start Time: ${listing.startTime}")
-            Text(text = "End Time: ${listing.endTime}")
+            //Text(text = "Rating: ${listing.rating}")
+            //Text(text = "Start Time: ${listing.startTime}")
+            //Text(text = "End Time: ${listing.endTime}")
             //Text(text = "Reviews: ${listing.reviews}")
         }
     }

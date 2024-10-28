@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -45,7 +46,7 @@ import kotlinx.coroutines.launch
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OwnerListingScreen(listing: ListingComponent, navController: NavHostController) {
+fun OwnerListingScreen(listing: ListingComponent, navController: NavHostController, isOwner: Boolean) {
     var imageUrls by remember { mutableStateOf<List<String>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -76,6 +77,15 @@ fun OwnerListingScreen(listing: ListingComponent, navController: NavHostControll
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    if (isOwner) {
+                        IconButton(onClick = {
+                            navController.navigate("EditListingScreen/${listing.id}")
+                        }) {
+                            Icon(Icons.Default.Edit, contentDescription = "Edit Listing")
+                        }
                     }
                 }
             )
