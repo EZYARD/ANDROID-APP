@@ -3,6 +3,8 @@ agp = "8.6.1"
 coilCompose = "2.7.0"
 coilComposeVersion = "2.7.0"
 datastorePreferences = "1.1.1"
+firebaseAuth = "23.1.0"
+firebaseBom = "33.5.1"
 kotlin = "1.9.0"
 coreKtx = "1.13.1"
 junit = "4.13.2"
@@ -22,6 +24,9 @@ androidx-navigation-compose = { module = "androidx.navigation:navigation-compose
 coil = { module = "io.coil-kt:coil", version.ref = "coilCompose" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 coil-compose-v132 = { module = "io.coil-kt:coil-compose", version.ref = "coilComposeVersion" }
+firebase-analytics-ktx = { module = "com.google.frebase:firebase-analytics-ktx" }
+firebase-auth = { module = "com.google.firebase:firebase-auth", version.ref = "firebaseAuth" }
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }

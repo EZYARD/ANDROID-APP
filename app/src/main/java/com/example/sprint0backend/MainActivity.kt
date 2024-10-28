@@ -23,6 +23,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.auth.FirebaseAuth
 
 
 class MainActivity : ComponentActivity() {
@@ -72,6 +73,14 @@ fun MainApp() {
             composable("ProfileScreen") {
                 ProfileScreen(navController = navController)
             }
+            composable("LoginScreen") {
+                LoginScreen(navController = navController)
+            }
+            composable("CreateAccount") {  // Add this line for CreateAccount
+                CreateAccount(navController = navController)
+            }
+
+
             composable("OwnerListingScreen/{listingId}") { backStackEntry ->
                 // default values
                 var listingIdString: String = ""
@@ -133,6 +142,9 @@ fun MainApp() {
 @Composable
 fun BottomNavigationBar(navController: NavHostController) {
     val currentDestination = navController.currentDestination
+    val auth = FirebaseAuth.getInstance() // Initialize FirebaseAuth
+    val user = auth.currentUser // Get the current user
+
     NavigationBar(
         containerColor = Color.LightGray
     ) {
@@ -163,9 +175,18 @@ fun BottomNavigationBar(navController: NavHostController) {
             label = { Text("Profile") },
             selected = currentDestination != null && currentDestination.route == "ProfileScreen",
             onClick = {
-                navController.navigate("ProfileScreen") {
-                    popUpTo(navController.graph.startDestinationId)
-                    launchSingleTop = true
+                if (user != null) {
+                    // If user is signed in, navigate to ProfileScreen
+                    navController.navigate("ProfileScreen") {
+                        popUpTo(navController.graph.startDestinationId)
+                        launchSingleTop = true
+                    }
+                } else {
+                    // If user is not signed in, navigate to LoginScreen
+                    navController.navigate("LoginScreen") {
+                        popUpTo(navController.graph.startDestinationId)
+                        launchSingleTop = true
+                    }
                 }
             }
         )
