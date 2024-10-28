@@ -31,11 +31,9 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.tasks.await
-
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.Color
 import kotlinx.coroutines.launch
@@ -134,7 +132,8 @@ fun LoginScreen(navController: NavHostController) {
                     .size(60.dp)
                     .clickable {
                         // Google
-                        Firebase.analytics.logEvent("log_button_click", null)
+
+
                     }
             )
 

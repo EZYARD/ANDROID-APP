@@ -78,6 +78,11 @@ dependencies {
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.auth)
 
+    implementation("androidx.credentials:credentials:1.5.0-alpha06")
+    implementation("androidx.credentials:credentials-play-services-auth:1.5.0-alpha06")
+    implementation("com.google.android.gms:play-services-auth:21.2.0")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+
     // Retrofit dependencies for backend
     implementation(libs.retrofit)
     implementation(libs.retrofit.gson)
