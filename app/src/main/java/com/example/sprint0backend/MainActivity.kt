@@ -67,20 +67,19 @@ fun MainApp() {
             composable("ListingsScreen") {
                 ListingsScreen(navController = navController)
             }
-            composable("SearchScreen") {
-                SearchScreen(navController = navController)
-            }
             composable("ProfileScreen") {
                 ProfileScreen(navController = navController)
             }
+
             composable("LoginScreen") {
                 LoginScreen(navController = navController)
             }
             composable("CreateAccount") {  // Add this line for CreateAccount
                 CreateAccount(navController = navController)
             }
-
-
+            composable("EditListingScreen/{listingId}") { backStackEntry ->
+                EditListingScreen(navController = navController)
+            }
             composable("OwnerListingScreen/{listingId}") { backStackEntry ->
                 // default values
                 var listingIdString: String = ""
@@ -124,7 +123,7 @@ fun MainApp() {
                 if (selectedListing != null) {
                     // Pass the selected listing to the OwnerListingScreen
 
-                    OwnerListingScreen(listing = selectedListing, navController = navController)
+                    OwnerListingScreen(listing = selectedListing, navController = navController, isOwner = true)
                 } else {
                     // Show error message or fallback
                     Text(text = errorMessage ?: "Loading...", modifier = Modifier.fillMaxSize())
@@ -154,17 +153,6 @@ fun BottomNavigationBar(navController: NavHostController) {
             selected = currentDestination != null && currentDestination.route == "ListingsScreen",
             onClick = {
                 navController.navigate("ListingsScreen") {
-                    popUpTo(navController.graph.startDestinationId)
-                    launchSingleTop = true
-                }
-            }
-        )
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Search, contentDescription = "Search") },
-            label = { Text("Search") },
-            selected = currentDestination != null && currentDestination.route == "SearchScreen",
-            onClick = {
-                navController.navigate("SearchScreen") {
                     popUpTo(navController.graph.startDestinationId)
                     launchSingleTop = true
                 }
