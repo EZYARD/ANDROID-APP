@@ -98,6 +98,10 @@ fun ProfileScreen(navController: NavHostController) {
                 Text(text = "Delete Account")
             }
 
+            TextButton(onClick = { navController.navigate("CreateListingsScreen") }) {
+                Text(text = "Don't have an account? Create one")
+            }
+
             // Display error message if any action fails
             errorMessage?.let {
                 Text(text = it, color = Color.Red)
