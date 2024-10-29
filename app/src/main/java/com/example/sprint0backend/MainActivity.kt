@@ -80,6 +80,10 @@ fun MainApp() {
                 CreateAccount(navController = navController)
             }
 
+            composable("CreateListingScreen") {
+                CreateListingScreen(navController = navController)
+            }
+
 
             composable("OwnerListingScreen/{listingId}") { backStackEntry ->
                 // default values

@@ -131,7 +131,17 @@ fun LoginScreen(navController: NavHostController) {
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            TextButton(onClick = { /* Forgot Password */ }) {
+            TextButton(onClick = {
+                // Send password reset email
+                coroutineScope.launch {
+                    try {
+                        Firebase.auth.sendPasswordResetEmail(email).await()
+                        errorMessage = "Password reset email sent. Please check your inbox."
+                    } catch (e: Exception) {
+                        errorMessage = e.localizedMessage
+                    }
+                }
+            }) {
                 Text(text = "Forgot Password?")
             }
 
@@ -147,9 +157,7 @@ fun LoginScreen(navController: NavHostController) {
                 modifier = Modifier
                     .size(60.dp)
                     .clickable {
-                        // Google
-
-
+                        // Google login logic goes here
                     }
             )
 
