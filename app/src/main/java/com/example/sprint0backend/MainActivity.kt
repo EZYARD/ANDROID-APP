@@ -70,7 +70,6 @@ fun MainApp() {
             composable("ProfileScreen") {
                 ProfileScreen(navController = navController)
             }
-
             composable("LoginScreen") {
                 LoginScreen(navController = navController)
             }
@@ -80,6 +79,10 @@ fun MainApp() {
             composable("EditListingScreen/{listingId}") { backStackEntry ->
                 val listingId = backStackEntry.arguments?.getString("listingId")?.toIntOrNull() ?: -1
                 var errorMessage by remember { mutableStateOf<String?>(null) }
+
+            composable("CreateListingScreen") {
+                CreateListingScreen(navController = navController)
+            }
 
                 BackendWrapper.getListings(
                     onSuccess = { backendListings ->
