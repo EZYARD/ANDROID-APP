@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import androidx.compose.runtime.derivedStateOf
 
 @Composable
 fun ListingsScreen(navController: NavHostController) {
@@ -37,15 +38,14 @@ fun ListingsScreen(navController: NavHostController) {
     var zipCodeInput by rememberSaveable { mutableStateOf("") }
 
     var listings by rememberSaveable { mutableStateOf<List<ListingComponent>>(emptyList()) }
-    var filteredListings by rememberSaveable { mutableStateOf<List<ListingComponent>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
+    // Fetch listings only once when the screen loads
     LaunchedEffect(Unit) {
         BackendWrapper.getListings(
             onSuccess = { backendListings ->
                 listings = backendListings
-                filteredListings = backendListings
                 isLoading = false
             },
             onError = { error ->
@@ -55,15 +55,18 @@ fun ListingsScreen(navController: NavHostController) {
         )
     }
 
-    LaunchedEffect(selectedCategories) {
-        FetchAndFilterListings(
-            selectedCategories = selectedCategories,
-            allListings = listings,
-            onLoading = { loading -> isLoading = loading },
-            onSuccess = { listings ->
-                filteredListings = listings
+    // Filter listings based on selected categories
+    val filteredListings by remember {
+        derivedStateOf {
+            if (selectedCategories.isEmpty()) {
+                listings
+            } else {
+                listings.filter { listing ->
+                    val tagsList = listing.tags.split(",").map { it.trim() }
+                    tagsList.any { tag -> selectedCategories.contains(tag) }
+                }
             }
-        )
+        }
     }
 
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -88,7 +91,6 @@ fun ListingsScreen(navController: NavHostController) {
             isLoading -> {
                 CircularProgressIndicator(modifier = Modifier.padding(16.dp))
             }
-
             errorMessage != null -> {
                 Text(
                     text = errorMessage ?: "An error occurred while fetching listings.",
@@ -96,7 +98,6 @@ fun ListingsScreen(navController: NavHostController) {
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
-
             filteredListings.isNotEmpty() -> {
                 LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp)) {
                     items(filteredListings) { listing ->
@@ -107,6 +108,7 @@ fun ListingsScreen(navController: NavHostController) {
         }
     }
 }
+
 
 @Composable
 fun ZipCodeInput(zipCodeInput: String, onZipCodeChange: (String) -> Unit) {
