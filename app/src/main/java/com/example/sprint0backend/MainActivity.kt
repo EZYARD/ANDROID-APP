@@ -79,6 +79,12 @@ fun MainApp() {
             composable("CreateAccount") {  // Add this line for CreateAccount
                 CreateAccount(navController = navController)
             }
+
+            composable("CreateListingScreen") {
+                CreateListingScreen(navController = navController)
+            }
+
+
             composable("OwnerListingScreen/{listingId}") { backStackEntry ->
                 // default values
                 var listingIdString: String = ""

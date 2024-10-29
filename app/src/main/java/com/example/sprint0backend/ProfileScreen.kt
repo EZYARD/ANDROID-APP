@@ -20,6 +20,7 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.tasks.await
 
 
@@ -29,96 +30,119 @@ fun ProfileScreen(navController: NavHostController) {
     val user = Firebase.auth.currentUser
     val coroutineScope = rememberCoroutineScope()
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var showDeleteConfirmation by remember { mutableStateOf(false) } // State for delete confirmation dialog
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp), // Add padding around the column
-        verticalArrangement = Arrangement.SpaceBetween, // Space between items
-        horizontalAlignment = Alignment.CenterHorizontally // Center the content horizontally
-    ) {
-        // Back Arrow Button
-        IconButton(
-            onClick = { navController.navigate("ListingsScreen") }, // Navigate directly to ListingsScreen
-            modifier = Modifier
-                .align(Alignment.Start) // Align the button to the start
-                .padding(bottom = 16.dp) // Space below the button
+    Box(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.SpaceBetween,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+            // Back Arrow Button
+            IconButton(
+                onClick = { navController.navigate("ListingsScreen") },
+                modifier = Modifier.align(Alignment.Start).padding(bottom = 16.dp)
+            ) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+            }
+
+            // Welcome Image
+            Image(
+                painter = painterResource(id = R.drawable.ezyard),
+                contentDescription = "Profile image",
+                modifier = Modifier.size(200.dp)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (user != null) {
+                // User is signed in
+                Text(
+                    text = "Welcome, ${user.displayName ?: user.email}!",
+                    style = MaterialTheme.typography.headlineMedium,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Text(
+                    text = "Here you will find the settings and components for the User Profile.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                // Sign Out Button
+                Button(onClick = {
+                    Firebase.auth.signOut()
+                    navController.navigate("LoginScreen")
+                }) {
+                    Text(text = "Sign Out")
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Navigate to CreateListingScreen Button
+                Button(
+                    onClick = { navController.navigate("CreateListingScreen") },
+                    modifier = Modifier.padding(top = 16.dp)
+                ) {
+                    Text(text = "Create a Listing")
+                }
+
+                // Delete Account Button
+                Button(
+                    onClick = { showDeleteConfirmation = true }, // Show confirmation dialog
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                    modifier = Modifier
+                        .padding(top = 16.dp)
+                        .size(150.dp, 48.dp) // Increased size for better visibility
+                ) {
+                    Text(text = "Delete Account", fontSize = 14.sp) // Larger font size for readability
+                }
+
+                // Display error message if any action fails
+                errorMessage?.let {
+                    Text(text = it, color = Color.Red)
+                }
+            } else {
+                // User is not signed in
+                Text(
+                    text = "You are not signed in.",
+                    style = MaterialTheme.typography.headlineMedium,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                TextButton(onClick = {
+                    navController.navigate("LoginScreen")
+                }) {
+                    Text(text = "Login")
+                }
+            }
         }
 
-        // Welcome Image (if applicable, you can add your app's logo or image)
-        Image(
-            painter = painterResource(id = R.drawable.ezyard), // Replace with your logo image
-            contentDescription = "Profile image",
-            modifier = Modifier.size(200.dp) // Set size as needed
-        )
-
-        Spacer(modifier = Modifier.height(16.dp)) // Space below the image
-
-        if (user != null) {
-            // User is signed in
-            Text(
-                text = "Welcome, ${user.displayName ?: user.email}!",
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(bottom = 8.dp) // Space below the welcome text
-            )
-            Text(
-                text = "Here you will find the settings and components for the User Profile.",
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(bottom = 16.dp) // Space below the description text
-            )
-
-            // Sign Out Button
-            Button(
-                onClick = {
-                    Firebase.auth.signOut() // Sign out from Firebase
-                    navController.navigate("LoginScreen") // Navigate to Login screen
-                }
-            ) {
-                Text(text = "Sign Out")
-            }
-
-            Spacer(modifier = Modifier.height(16.dp)) // Space above the delete button
-
-            // Delete Account Button
-            Button(
-                onClick = {
-                    coroutineScope.launch {
-                        try {
-                            Firebase.auth.currentUser!!.delete().await() // Delete user account
-                            navController.navigate("LoginScreen") // Navigate to Login screen after deletion
-                        } catch (e: Exception) {
-                            errorMessage = e.localizedMessage // Display error message if deletion fails
+        // Confirmation dialog for account deletion
+        if (showDeleteConfirmation) {
+            AlertDialog(
+                onDismissRequest = { showDeleteConfirmation = false },
+                title = { Text(text = "Confirm Deletion") },
+                text = { Text(text = "Are you sure you want to delete your account? This action cannot be undone.") },
+                confirmButton = {
+                    TextButton(onClick = {
+                        coroutineScope.launch {
+                            try {
+                                Firebase.auth.currentUser!!.delete().await()
+                                navController.navigate("LoginScreen")
+                            } catch (e: Exception) {
+                                errorMessage = e.localizedMessage
+                            }
                         }
+                        showDeleteConfirmation = false // Close dialog after action
+                    }) {
+                        Text("Yes")
                     }
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Red) // Red color for delete button
-            ) {
-                Text(text = "Delete Account")
-            }
-
-            TextButton(onClick = { navController.navigate("CreateListingsScreen") }) {
-                Text(text = "Don't have an account? Create one")
-            }
-
-            // Display error message if any action fails
-            errorMessage?.let {
-                Text(text = it, color = Color.Red)
-            }
-        } else {
-            // User is not signed in
-            Text(
-                text = "You are not signed in.",
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(bottom = 8.dp) // Space below the message
+                dismissButton = {
+                    TextButton(onClick = { showDeleteConfirmation = false }) {
+                        Text("No")
+                    }
+                }
             )
-            TextButton(onClick = {
-                // Navigate to LoginScreen
-                navController.navigate("LoginScreen")
-            }) {
-                Text(text = "Login")
-            }
         }
     }
 }
