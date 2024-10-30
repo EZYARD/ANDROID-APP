@@ -77,9 +77,21 @@ fun MainApp() {
             composable("CreateAccount") {  // Add this line for CreateAccount
                 CreateAccount(navController = navController)
             }
+            composable("CreateListingScreen") {
+                CreateListingScreen(navController = navController)
+            }
             composable("EditListingScreen/{listingId}") { backStackEntry ->
                 val listingId = backStackEntry.arguments?.getString("listingId")?.toIntOrNull() ?: -1
                 var errorMessage by remember { mutableStateOf<String?>(null) }
+
+
+            
+
+            composable("EditListingScreen/{listingId}") { backStackEntry ->
+                val listingId = backStackEntry.arguments?.getString("listingId")?.toIntOrNull() ?: -1
+                var errorMessage by remember { mutableStateOf<String?>(null) }
+
+
 
                 BackendWrapper.getListings(
                     onSuccess = { backendListings ->
@@ -89,6 +101,17 @@ fun MainApp() {
                         errorMessage = error
                     }
                 )
+
+
+                BackendWrapper.getListings(
+                    onSuccess = { backendListings ->
+                        listings = backendListings
+                    },
+                    onError = { error ->
+                        errorMessage = error
+                    }
+                )
+
 
                 // Check if listings have been loaded and if the selected listing exists
                 val selectedListing = listings.find { it.id == listingId }

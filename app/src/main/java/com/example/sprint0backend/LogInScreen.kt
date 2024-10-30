@@ -36,7 +36,10 @@ import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.tasks.await
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.Color
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
+
+var userToken by mutableStateOf<String?>(null)
 
 @Composable
 fun LoginScreen(navController: NavHostController) {
@@ -100,9 +103,22 @@ fun LoginScreen(navController: NavHostController) {
                 onClick = {
                     coroutineScope.launch {
                         try {
+                            // Sign in with Firebase
                             Firebase.auth.signInWithEmailAndPassword(email, password).await()
-                            // Navigate to the ProfileScreen on success
-                            navController.navigate("ProfileScreen") // Navigate to ProfileScreen instead of CreateAccount
+
+                            // Retrieve the current user
+                            val mUser = FirebaseAuth.getInstance().currentUser
+                            mUser?.getIdToken(true)?.addOnCompleteListener { task ->
+                                if (task.isSuccessful) {
+                                    // Store the token
+                                    userToken = task.result?.token
+                                    // Navigate to ProfileScreen
+                                    navController.navigate("ProfileScreen")
+                                } else {
+                                    // Handle token retrieval error
+                                    errorMessage = task.exception?.localizedMessage
+                                }
+                            }
                         } catch (e: Exception) {
                             // Display error message if sign-in fails
                             errorMessage = e.localizedMessage
@@ -115,7 +131,17 @@ fun LoginScreen(navController: NavHostController) {
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            TextButton(onClick = { /* Forgot Password */ }) {
+            TextButton(onClick = {
+                // Send password reset email
+                coroutineScope.launch {
+                    try {
+                        Firebase.auth.sendPasswordResetEmail(email).await()
+                        errorMessage = "Password reset email sent. Please check your inbox."
+                    } catch (e: Exception) {
+                        errorMessage = e.localizedMessage
+                    }
+                }
+            }) {
                 Text(text = "Forgot Password?")
             }
 
@@ -131,9 +157,7 @@ fun LoginScreen(navController: NavHostController) {
                 modifier = Modifier
                     .size(60.dp)
                     .clickable {
-                        // Google
-
-
+                        // Google login logic goes here
                     }
             )
 
