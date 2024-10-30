@@ -64,6 +64,7 @@ dependencies {
     // Storage and Data handling
     implementation(libs.androidx.storage)
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.firebase.auth.ktx)
 
     // Testing dependencies
     testImplementation(libs.junit)
