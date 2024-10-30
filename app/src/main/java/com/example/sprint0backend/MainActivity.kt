@@ -67,46 +67,38 @@ fun MainApp() {
             composable("ListingsScreen") {
                 ListingsScreen(navController = navController)
             }
-            composable("SearchScreen") {
-                SearchScreen(navController = navController)
-            }
             composable("ProfileScreen") {
                 ProfileScreen(navController = navController)
             }
+
             composable("LoginScreen") {
                 LoginScreen(navController = navController)
             }
             composable("CreateAccount") {  // Add this line for CreateAccount
                 CreateAccount(navController = navController)
             }
+            composable("EditListingScreen/{listingId}") { backStackEntry ->
+                val listingId = backStackEntry.arguments?.getString("listingId")?.toIntOrNull() ?: -1
+                var errorMessage by remember { mutableStateOf<String?>(null) }
 
+                BackendWrapper.getListings(
+                    onSuccess = { backendListings ->
+                        listings = backendListings
+                    },
+                    onError = { error ->
+                        errorMessage = error
+                    }
+                )
 
+                // Check if listings have been loaded and if the selected listing exists
+                val selectedListing = listings.find { it.id == listingId }
+
+                if (selectedListing != null) {
+                    EditListingScreen(listing = selectedListing, navController = navController)
+                }
+            }
             composable("OwnerListingScreen/{listingId}") { backStackEntry ->
-                // default values
-                var listingIdString: String = ""
-                var listingId: Int = -1
-
-                // Check if backStackEntry.arguments exists
-                if (backStackEntry.arguments != null) {
-                    // Check if "listingId" is present in the arguments and retrieve it
-                    val tempId = backStackEntry.arguments!!.getString("listingId")
-
-                    // Ensure tempId is not null or empty
-                    if (!tempId.isNullOrEmpty()) {
-                        listingIdString = tempId
-                    }
-                }
-
-                // Try to convert listingIdString to an integer
-                listingId = if (listingIdString.isNotEmpty()) {
-                    try {
-                        listingIdString.toInt()  // Convert the string to an integer
-                    } catch (e: NumberFormatException) {
-                        -1  // Set default value if conversion fails
-                    }
-                } else {
-                    -1  // return if no listings exist
-                }
+                val listingId = backStackEntry.arguments?.getString("listingId")?.toIntOrNull() ?: -1
                 var errorMessage by remember { mutableStateOf<String?>(null) }
 
                 BackendWrapper.getListings(
@@ -124,7 +116,7 @@ fun MainApp() {
                 if (selectedListing != null) {
                     // Pass the selected listing to the OwnerListingScreen
 
-                    OwnerListingScreen(listing = selectedListing, navController = navController)
+                    OwnerListingScreen(listing = selectedListing, navController = navController, isOwner = true)
                 } else {
                     // Show error message or fallback
                     Text(text = errorMessage ?: "Loading...", modifier = Modifier.fillMaxSize())
@@ -154,17 +146,6 @@ fun BottomNavigationBar(navController: NavHostController) {
             selected = currentDestination != null && currentDestination.route == "ListingsScreen",
             onClick = {
                 navController.navigate("ListingsScreen") {
-                    popUpTo(navController.graph.startDestinationId)
-                    launchSingleTop = true
-                }
-            }
-        )
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Search, contentDescription = "Search") },
-            label = { Text("Search") },
-            selected = currentDestination != null && currentDestination.route == "SearchScreen",
-            onClick = {
-                navController.navigate("SearchScreen") {
                     popUpTo(navController.graph.startDestinationId)
                     launchSingleTop = true
                 }
