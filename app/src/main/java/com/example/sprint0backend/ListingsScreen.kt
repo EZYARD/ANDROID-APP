@@ -197,24 +197,30 @@ fun CategoryFilter(categories: List<String>, selectedCategories: Set<String>,
     }
 }
 
-private fun FetchAndFilterListings(
-    selectedCategories: Set<String>,
-    allListings: List<ListingComponent>,
-    onLoading: (Boolean) -> Unit,
-    onSuccess: (List<ListingComponent>) -> Unit
-) {
-    onLoading(true)
-
-    // Filter listings based on selected categories
-    val filtered = if (selectedCategories.isEmpty()) {
-        allListings
-    } else {
-        allListings.filter { listing ->
-            val tagsList = listing.tags.split(",").map { it.trim() }
-            tagsList.any { tag -> selectedCategories.contains(tag) }
-        }
-    }
-
-    onLoading(false)
-    onSuccess(filtered)
-}
+/**
+ * A way to filter listings
+ *
+ * This is included in the main code in the ListingsScreen function
+ * [BRING UP IN MEETING FOR POTENTIAL DELETION]
+ * */
+//private fun FetchAndFilterListings(
+//    selectedCategories: Set<String>,
+//    allListings: List<ListingComponent>,
+//    onLoading: (Boolean) -> Unit,
+//    onSuccess: (List<ListingComponent>) -> Unit
+//) {
+//    onLoading(true)
+//
+//    // Filter listings based on selected categories
+//    val filtered = if (selectedCategories.isEmpty()) {
+//        allListings
+//    } else {
+//        allListings.filter { listing ->
+//            val tagsList = listing.tags.split(",").map { it.trim() }
+//            tagsList.any { tag -> selectedCategories.contains(tag) }
+//        }
+//    }
+//
+//    onLoading(false)
+//    onSuccess(filtered)
+//}

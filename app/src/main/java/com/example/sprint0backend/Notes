@@ -1,13 +1,4 @@
-By default, the code attempts to connect to the backend
+This is for your own personal notes.
 
-to disable/enable this, go to:
-
--> ListingsComponent
-    - on 'val picture:', switch String to Int (String = backend, Int = local)
-
--> com.example.sprint0backend.Listings.kt
-    - Switch picture mode for backend/local
-
--> ListingsScreen
-    - comment out the hardcoded listings
-    - comment out appropriate lines in the ListingsScreen function
+If this is no longer used, then the file
+will be deleted in the next Pull Request

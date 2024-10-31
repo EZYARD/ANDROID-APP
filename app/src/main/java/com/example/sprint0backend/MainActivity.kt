@@ -24,7 +24,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseAuth
-
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,6 +49,13 @@ fun MainApp() {
     var listings by rememberSaveable { mutableStateOf<List<ListingComponent>>(emptyList()) }
     var currentRoute by remember { mutableStateOf("ListingsScreen") }
 
+    // Initialize Retrofit and BackendSchema using the backend URL from Constants
+    val retrofit = Retrofit.Builder()
+        .baseUrl(Constants().BACKEND_URL) // Use the BACKEND_URL from Constants
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+    val backendService = retrofit.create(BackendSchema::class.java)
+
     LaunchedEffect(navController) {
         navController.addOnDestinationChangedListener { _, destination, _ ->
             currentRoute = destination.route ?: "ListingsScreen"
@@ -70,7 +78,6 @@ fun MainApp() {
             composable("ProfileScreen") {
                 ProfileScreen(navController = navController)
             }
-
             composable("LoginScreen") {
                 LoginScreen(navController = navController)
             }
@@ -97,7 +104,11 @@ fun MainApp() {
                 val selectedListing = listings.find { it.id == listingId }
 
                 if (selectedListing != null) {
-                    EditListingScreen(listing = selectedListing, navController = navController)
+                    EditListingScreen(
+                        listing = selectedListing,
+                        navController = navController,
+                        backendService = backendService
+                    )
                 }
             }
             composable("OwnerListingScreen/{listingId}") { backStackEntry ->
