@@ -1,94 +1,114 @@
 package com.example.sprint0backend
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import kotlinx.coroutines.launch
-import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.text.input.KeyboardType
 
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateListingScreen(navController: NavHostController) {
-    var title by remember { mutableStateOf("") } // Field for the title of the yard sale
-    var date by remember { mutableStateOf("") } // Field for the date
-    var time by remember { mutableStateOf("") } // Field for the time
-    var areaCode by remember { mutableStateOf("") } // Field for area code
-    var selectedTags by remember { mutableStateOf(setOf<String>()) } // Field for selected tags/categories
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    val coroutineScope = rememberCoroutineScope()
+    // Fields are empty since this is a new listing
+    var name by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+    var city by remember { mutableStateOf("") }
+    var state by remember { mutableStateOf("") }
+    var zipcode by remember { mutableStateOf("") }
+    var priceRange by remember { mutableStateOf("") }
+    var selectedTags by remember { mutableStateOf(setOf<String>()) }
+    val availableTags = listOf("Clothing", "Electronics", "Toys", "Books", "Miscellaneous")
+    var showTagDialog by remember { mutableStateOf(false) }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        // Column for the form fields
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 56.dp), // Add padding at the top to avoid overlap with the back button
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Input field for Title of Yard Sale
-            OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Title of Yard Sale") })
-
-            // Input field for Date
-            OutlinedTextField(value = date, onValueChange = { date = it }, label = { Text("Date") })
-
-            // Input field for Time
-            OutlinedTextField(value = time, onValueChange = { time = it }, label = { Text("Time") })
-
-            // Input field for Area Code
-            OutlinedTextField(value = areaCode, onValueChange = { areaCode = it }, label = { Text("Area Code") })
-
-            // Categories / Tags section (to be filled out)
-            // TODO: Add UI components for selecting tags (e.g., FilterChip similar to SearchScreen)
-
-            Button(
-                onClick = {
-                    coroutineScope.launch {
-                        // This is just for UI purposes, no action taken
-                        // You can add backend connection code here later
-                        // val newListing = ListingComponent(...)
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Create Listing") },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    TextButton(onClick = {
+                        // Do nothing on Save click for UI testing purposes
+                    }) {
+                        Text("Save", style = MaterialTheme.typography.labelLarge)
                     }
                 }
-            ) {
-                Text("Create Listing")
-            }
-
-            errorMessage?.let {
-                Text(text = it, color = Color.Red)
-            }
+            )
         }
-
-        // Back button to navigate to Profile screen
-        IconButton(
-            onClick = { navController.navigate("ProfileScreen") },
+    ) { paddingValues ->
+        Column(
             modifier = Modifier
-                .align(Alignment.TopStart) // Align to top start of the box
+                .padding(paddingValues)
                 .padding(16.dp)
+                .fillMaxWidth()
         ) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+            ListingTextField(label = "Name", value = name, onValueChange = { name = it })
+            ListingTextField(label = "Description", value = description, onValueChange = { description = it })
+            ListingTextField(label = "City", value = city, onValueChange = { city = it })
+            ListingTextField(label = "State", value = state, onValueChange = { state = it })
+            ListingTextField(label = "Zip Code", value = zipcode, onValueChange = { zipcode = it }, keyboardType = KeyboardType.Number)
+            ListingTextField(label = "Price Range", value = priceRange, onValueChange = { priceRange = it }, keyboardType = KeyboardType.Number)
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            TextButton(onClick = { showTagDialog = true }) {
+                Text("Add Tags")
+            }
+            Text("Selected Tags: ${selectedTags.joinToString(", ")}", style = MaterialTheme.typography.bodyMedium)
         }
     }
+
+    if (showTagDialog) {
+        AlertDialog(
+            onDismissRequest = { showTagDialog = false },
+            title = { Text("Select Tags") },
+            text = {
+                Column {
+                    availableTags.forEach { tag ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(
+                                checked = tag in selectedTags,
+                                onCheckedChange = {
+                                    selectedTags = if (it) selectedTags + tag else selectedTags - tag
+                                }
+                            )
+                            Text(text = tag)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showTagDialog = false }) {
+                    Text("OK")
+                }
+            }
+        )
+    }
 }
+
