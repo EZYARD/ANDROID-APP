@@ -71,6 +71,7 @@ fun ProfileScreen(navController: NavHostController) {
                 // Sign Out Button
                 Button(onClick = {
                     Firebase.auth.signOut()
+                    userToken = null
                     navController.navigate("LoginScreen")
                 }) {
                     Text(text = "Sign Out")
