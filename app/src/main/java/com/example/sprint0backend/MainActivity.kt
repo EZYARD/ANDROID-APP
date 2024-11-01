@@ -129,8 +129,12 @@ fun MainApp() {
 
                 if (selectedListing != null) {
                     // Pass the selected listing to the OwnerListingScreen
+                    selectedListing.let {
+                        val isOwner = userToken != null
+                        OwnerListingScreen(listing = it, navController = navController, isOwner = isOwner)
+                    }
 
-                    OwnerListingScreen(listing = selectedListing, navController = navController, isOwner = true)
+                    //OwnerListingScreen(listing = selectedListing, navController = navController, isOwner = true)
                 } else {
                     // Show error message or fallback
                     Text(text = errorMessage ?: "Loading...", modifier = Modifier.fillMaxSize())
