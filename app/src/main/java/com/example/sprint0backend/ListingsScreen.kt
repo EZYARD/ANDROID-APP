@@ -29,6 +29,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.compose.runtime.derivedStateOf
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 
 @Composable
 fun ListingsScreen(navController: NavHostController) {
@@ -36,7 +38,8 @@ fun ListingsScreen(navController: NavHostController) {
     var selectedCategories by rememberSaveable { mutableStateOf(setOf<String>()) }
     var isExpanded by rememberSaveable { mutableStateOf(false) }
     var zipCodeInput by rememberSaveable { mutableStateOf("") }
-
+    var uid by rememberSaveable { mutableStateOf("") }
+    val user = Firebase.auth.currentUser
     var listings by rememberSaveable { mutableStateOf<List<ListingComponent>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -55,17 +58,26 @@ fun ListingsScreen(navController: NavHostController) {
         )
     }
 
+    LaunchedEffect(user) {
+        if (user != null) {
+            uid = user.uid
+        }
+    }
+
     // Filter listings based on selected categories
     val filteredListings by remember {
         derivedStateOf {
-            if (selectedCategories.isEmpty()) {
-                listings
+            val filteredList = if (selectedCategories.isEmpty()) {
+                listings // Show all listings
             } else {
                 listings.filter { listing ->
                     val tagsList = listing.tags.split(",").map { it.trim() }
                     tagsList.any { tag -> selectedCategories.contains(tag) }
                 }
             }
+
+            // Sort the filtered list to put listings with uid === listing.uid at the top
+            filteredList.sortedWith(compareByDescending { listing -> listing.uid == uid })
         }
     }
 

@@ -32,6 +32,26 @@ class BackendWrapper {
             })
         }
 
+        fun testAuth(
+            idToken: String,
+            onSuccess: (String) -> Unit,
+            onError: (String) -> Unit
+        ) {
+            RetrofitInstance.api.testAuth("Bearer $idToken").enqueue(object : Callback<String> {
+                override fun onResponse(call: Call<String>, response: Response<String>) {
+                    if (response.isSuccessful) {
+                        onSuccess(response.body() ?: "No response from server")
+                    } else {
+                        onError("Failed to verify: ${response.errorBody()?.string()}")
+                    }
+                }
+
+                override fun onFailure(call: Call<String>, t: Throwable) {
+                    onError("Network error: ${t.message}")
+                }
+            })
+        }
+
         // call to return a list of listing components from the backend
         fun getListings(
             onSuccess: (List<ListingComponent>) -> Unit,
@@ -62,6 +82,28 @@ class BackendWrapper {
                 onSuccess = onSuccess,
                 onError = onError
             )
+        }
+
+        fun createListing(
+            idToken: String,
+            listingRequest: ListingCreateRequest,
+            onSuccess: (ListingComponent) -> Unit,
+            onError: (String) -> Unit
+        ) {
+            val call = RetrofitInstance.api.createListing("Bearer $idToken", listingRequest)
+            call.enqueue(object : Callback<ListingComponent> {
+                override fun onResponse(call: Call<ListingComponent>, response: Response<ListingComponent>) {
+                    if (response.isSuccessful) {
+                        response.body()?.let { onSuccess(it) } ?: onError("Empty response from server")
+                    } else {
+                        onError("Failed to create listing: ${response.errorBody()?.string()}")
+                    }
+                }
+
+                override fun onFailure(call: Call<ListingComponent>, t: Throwable) {
+                    onError("Network error: ${t.message}")
+                }
+            })
         }
     }
 }

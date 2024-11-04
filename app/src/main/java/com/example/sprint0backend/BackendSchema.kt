@@ -1,7 +1,10 @@
 package com.example.sprint0backend
 
 import retrofit2.Call
+import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Header
+import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -25,26 +28,27 @@ data class ListingComponent(
     val rating: String?,      // matching backend's nullable String
     val startTime: String,
     val endTime: String,
-    val reviews: String?
+    val reviews: String?,
+    val uid: String?
 )
 
-
-//data class ListingComponent(
-//    val id: Int,
-//    val name: String,
-//    val description: String,
-//    val city: String,
-//    val state: String,
-//    val zipcode: Int,
-//    val streetNumber: String,
-//    val streetName: String,
-//    val tags: String,
-//    val priceRange: Int,
-//    val rating: Float,
-//    val startTime: String,
-//    val endTime: String,
-//    val reviews: String
-//)
+data class ListingCreateRequest(
+    val name: String,
+    val streetNumber: Int,
+    val streetName: String,
+    val city: String,
+    val state: String,
+    val zipcode: Int,
+    val description: String,
+    val startTime: String, // ISO 8601 format
+    val endTime: String,   // ISO 8601 format
+    val tags: String? = null,
+    val priceRange: String? = null,
+    val rating: String? = null,
+    val reviews: String? = null,
+    val longitude: Float? = null,
+    val latitude: Float? = null
+)
 
 // Interface to define API endpoints for Retrofit
 interface BackendSchema {
@@ -73,4 +77,12 @@ interface BackendSchema {
         @Query("reviews") reviews: String?
     ): Call<Void>
 
+    @GET("/testAuth")
+    fun testAuth(@Header("Authorization") authHeader: String): Call<String>
+
+    @POST("listings/create")
+    fun createListing(
+        @Header("Authorization") authHeader: String,
+        @Body listingCreateRequest: ListingCreateRequest
+    ): Call<ListingComponent>
 }
