@@ -6,6 +6,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
@@ -21,6 +22,7 @@ import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.sp
+import com.example.sprint0backend.BackendWrapper.Companion.testAuth
 import kotlinx.coroutines.tasks.await
 
 
@@ -30,7 +32,20 @@ fun ProfileScreen(navController: NavHostController) {
     val user = Firebase.auth.currentUser
     val coroutineScope = rememberCoroutineScope()
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    var showDeleteConfirmation by remember { mutableStateOf(false) } // State for delete confirmation dialog
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
+    var uid by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(user) {
+        if (user != null) {
+            try {
+                userToken = user.getIdToken(true).await().token
+                uid = user.uid
+                testAuth(userToken!!, onSuccess = { println(it) }, onError = { println(it) })
+            } catch (e: Exception) {
+                errorMessage = e.localizedMessage
+            }
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Column(
@@ -58,8 +73,8 @@ fun ProfileScreen(navController: NavHostController) {
             if (user != null) {
                 // User is signed in
                 Text(
-                    text = "Welcome, ${user.displayName ?: user.email}!",
-                    style = MaterialTheme.typography.headlineMedium,
+                    text = "Welcome, ${user.email}!",
+                    style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 Text(
@@ -67,10 +82,17 @@ fun ProfileScreen(navController: NavHostController) {
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
+                Text(
+                    text = "User ID: $uid",
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
 
                 // Sign Out Button
                 Button(onClick = {
                     Firebase.auth.signOut()
+                    userToken = null
                     navController.navigate("LoginScreen")
                 }) {
                     Text(text = "Sign Out")
