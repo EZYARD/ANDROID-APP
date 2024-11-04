@@ -50,6 +50,13 @@ data class ListingCreateRequest(
     val latitude: Float? = null
 )
 
+data class RangeListingResponse(
+    val id: Int,
+    val name: String,
+    val address: String,
+    val distance_miles: Float
+)
+
 // Interface to define API endpoints for Retrofit
 interface BackendSchema {
 
@@ -85,4 +92,10 @@ interface BackendSchema {
         @Header("Authorization") authHeader: String,
         @Body listingCreateRequest: ListingCreateRequest
     ): Call<ListingComponent>
+
+    @GET("listings/distance")
+    fun getRangeListings(
+        @Query("location") location: String,
+        @Query("radius") range: Float
+    ): Call<List<RangeListingResponse>>
 }

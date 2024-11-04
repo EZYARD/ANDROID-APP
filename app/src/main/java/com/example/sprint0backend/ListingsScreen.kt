@@ -37,12 +37,16 @@ fun ListingsScreen(navController: NavHostController) {
     val categories = listOf("Clothing", "Electronics", "Toys", "Books", "Miscellaneous")
     var selectedCategories by rememberSaveable { mutableStateOf(setOf<String>()) }
     var isExpanded by rememberSaveable { mutableStateOf(false) }
-    var zipCodeInput by rememberSaveable { mutableStateOf("") }
     var uid by rememberSaveable { mutableStateOf("") }
     val user = Firebase.auth.currentUser
     var listings by rememberSaveable { mutableStateOf<List<ListingComponent>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    var locationState by rememberSaveable { mutableStateOf("Location not set") }
+    var rangeState: Float? by rememberSaveable { mutableStateOf(null) }
+    var showLocationDialog by rememberSaveable { mutableStateOf(false) }
+    var listByLocation by rememberSaveable { mutableStateOf<List<RangeListingResponse>>(emptyList()) }
 
     // Fetch listings only once when the screen loads
     LaunchedEffect(Unit) {
@@ -64,9 +68,10 @@ fun ListingsScreen(navController: NavHostController) {
         }
     }
 
-    // Filter listings based on selected categories
+// Filter listings based on selected categories and location
     val filteredListings by remember {
         derivedStateOf {
+            // Step 1: Filter by selected categories if any, otherwise show all listings
             val filteredList = if (selectedCategories.isEmpty()) {
                 listings // Show all listings
             } else {
@@ -76,17 +81,25 @@ fun ListingsScreen(navController: NavHostController) {
                 }
             }
 
-            // Sort the filtered list to put listings with uid === listing.uid at the top
-            filteredList.sortedWith(compareByDescending { listing -> listing.uid == uid })
+            // Step 2: Filter the list to only include listings that have matching IDs in listByLocation
+            val locationFilteredList = if (listByLocation.isNotEmpty()) {
+                filteredList.filter { listing ->
+                    listByLocation.any { rangeListing -> rangeListing.id == listing.id }
+                }
+            } else {
+                filteredList // If listByLocation is empty, retain the original filtered list
+            }
+
+            // Step 3: Sort the list to put listings with uid === listing.uid at the top
+            locationFilteredList.sortedWith(compareByDescending { listing -> listing.uid == uid })
         }
     }
 
+
     Column(modifier = Modifier.fillMaxWidth()) {
-        ZipCodeInput(
-            zipCodeInput = zipCodeInput,
-            onZipCodeChange = { newZipCode ->
-                zipCodeInput = newZipCode
-            }
+        LocationSelector(
+            locationState = locationState,
+            onLocationClick = { showLocationDialog = true }
         )
 
         CategoryFilter(
@@ -103,6 +116,7 @@ fun ListingsScreen(navController: NavHostController) {
             isLoading -> {
                 CircularProgressIndicator(modifier = Modifier.padding(16.dp))
             }
+
             errorMessage != null -> {
                 Text(
                     text = errorMessage ?: "An error occurred while fetching listings.",
@@ -110,49 +124,148 @@ fun ListingsScreen(navController: NavHostController) {
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
+//
+//            listByLocation.isNotEmpty() -> {
+//                LazyColumn(
+//                    modifier = Modifier
+//                        .fillMaxSize()
+//                        .padding(16.dp)
+//                ) {
+//                    items(listByLocation) { listing ->
+//                        Text(text = listing.name)
+//                        Text(text = listing.distance_miles.toString())
+//                    }
+//                }
+//            }
             filteredListings.isNotEmpty() -> {
-                LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp)
+                ) {
                     items(filteredListings) { listing ->
-                        Listings(listing = listing, navController = navController)
+                        Listings(listing = listing, navController = navController, distance = listByLocation.find { it.id == listing.id }?.distance_miles)
                     }
                 }
             }
+        }
+
+        if (showLocationDialog) {
+            LocationDialog(
+                onDismiss = { showLocationDialog = false },
+                onUpdate = { newLocation, range ->
+                    locationState = newLocation
+                    rangeState = range
+                    showLocationDialog = false
+
+                    if (rangeState != 200.0f) {
+                        // Fetch listings based on location and range
+                        BackendWrapper.getListingsByRange(newLocation, range,
+                            onSuccess = { backendListings ->
+                                listByLocation = backendListings
+                            },
+                            onError = { error ->
+                                errorMessage = error
+                                listByLocation = emptyList()
+                            }
+                        )
+                    } else {
+                        BackendWrapper.getListingsByRange(newLocation, 9.9999998E10f,
+                            onSuccess = { backendListings ->
+                                listByLocation = backendListings
+                            },
+                            onError = { error ->
+                                errorMessage = error
+                                listByLocation = emptyList()
+                            }
+                        )
+                    }
+                }
+            )
         }
     }
 }
 
 
 @Composable
-fun ZipCodeInput(zipCodeInput: String, onZipCodeChange: (String) -> Unit) {
-    OutlinedTextField(
-        value = zipCodeInput,
-        onValueChange = {
-            if (it.length <= 5 && it.all { char -> char.isDigit() }) {
-                onZipCodeChange(it)
-            } },
-        label = { Text("Enter Zip Code") },
-        placeholder = { Text("e.g., 12345") },
-        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+fun LocationSelector(
+    locationState: String,
+    onLocationClick: () -> Unit
+) {
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-        //.padding(horizontal = 16.dp)
-    )
+            .clickable { onLocationClick() }
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Default.LocationOn,
+            contentDescription = "Location",
+            tint = Color.Black
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = locationState,
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color.Black
+        )
+    }
+}
 
-    // This is to provide a line between the ZipCode TextField and the category filters
-    // [MAY BE REMOVED IN THE FUTURE]
-    HorizontalDivider(
-        thickness = 1.dp,
-        color = Color.LightGray
+@Composable
+fun LocationDialog(
+    onDismiss: () -> Unit,
+    onUpdate: (String, Float) -> Unit
+) {
+    var locationInput by remember { mutableStateOf("") }
+    var range by remember { mutableStateOf(200f) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = "Set Location") },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = locationInput,
+                    onValueChange = { locationInput = it },
+                    label = { Text("Enter Zip Code or Address") },
+                    placeholder = { Text("e.g., 12345 or 123 Main St") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(text = "Select Range: ${if (range != 200f) range.toInt() else "∞"} miles")
+                Slider(
+                    value = range,
+                    onValueChange = { range = it },
+                    valueRange = 0f..200f,
+                    steps = 10,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                onUpdate(locationInput, range)
+            }) {
+                Text("Update")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
     )
 }
 
 @Composable
-fun CategoryFilter(categories: List<String>, selectedCategories: Set<String>,
-                   onCategorySelected: (Set<String>) -> Unit, isExpanded: Boolean, onToggleExpanded: () -> Unit) {
+fun CategoryFilter(
+    categories: List<String>, selectedCategories: Set<String>,
+    onCategorySelected: (Set<String>) -> Unit, isExpanded: Boolean, onToggleExpanded: () -> Unit
+) {
     val summaryText = if (selectedCategories.isEmpty()) {
         "Filter by Categories"
-    }
-    else {
+    } else {
         "${selectedCategories.size} Categories Selected"
     }
 

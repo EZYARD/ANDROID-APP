@@ -84,6 +84,22 @@ class BackendWrapper {
             )
         }
 
+        fun getListingsByRange(
+            location: String,
+            range: Float,
+            onSuccess: (List<RangeListingResponse>) -> Unit,
+            onError: (String) -> Unit
+        ) {
+            makeCall(
+                call = RetrofitInstance.api.getRangeListings(location, range),
+                transform = { body ->
+                    body ?: emptyList()
+                },
+                onSuccess = onSuccess,
+                onError = onError
+            )
+        }
+
         fun createListing(
             idToken: String,
             listingRequest: ListingCreateRequest,

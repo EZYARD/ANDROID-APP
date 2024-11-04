@@ -55,7 +55,7 @@ suspend fun saveImageToLocalStorage(
 }
 
 @Composable
-fun Listings(listing: ListingComponent, navController: NavHostController) {
+fun Listings(listing: ListingComponent, navController: NavHostController, distance: Float?) {
     val coroutineScope = rememberCoroutineScope()
     var imageFile by remember { mutableStateOf<File?>(null) }
     var imageUrl by remember { mutableStateOf<String?>(null) }
@@ -129,6 +129,9 @@ fun Listings(listing: ListingComponent, navController: NavHostController) {
 
             // Display listing details as text below the image
             Text(text = "Name: ${listing.name}", style = MaterialTheme.typography.bodyMedium)
+            distance ?.let {
+                Text(text = "Distance: ${it} miles away", style = MaterialTheme.typography.bodyMedium)
+            }
             //Text(text = "Description: ${listing.description}")
             Text(text = "City: ${listing.city}, ${listing.state}")
             Text(text = "Street: ${listing.streetNumber} ${listing.streetName}, ${listing.zipcode}")
