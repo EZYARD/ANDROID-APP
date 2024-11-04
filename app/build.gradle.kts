@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     id("com.google.gms.google-services")
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin") // Apply the plugin here
 }
 
 android {
@@ -38,6 +39,7 @@ android {
     }
     buildFeatures {
         compose = true
+        viewBinding = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
@@ -65,6 +67,8 @@ dependencies {
     implementation(libs.androidx.storage)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.firebase.auth.ktx)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.constraintlayout)
 
     // Testing dependencies
     testImplementation(libs.junit)
@@ -87,6 +91,11 @@ dependencies {
     implementation("androidx.credentials:credentials-play-services-auth:1.5.0-alpha06")
     implementation("com.google.android.gms:play-services-auth:21.2.0")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+
+    // Google Maps
+    implementation("com.google.android.gms:play-services-maps:19.0.0")
+    implementation ("com.google.maps.android:maps-compose:2.11.0")
+
 
     // Retrofit for networking
     implementation(libs.retrofit)

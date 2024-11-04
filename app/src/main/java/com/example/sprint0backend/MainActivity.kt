@@ -1,9 +1,12 @@
 package com.example.sprint0backend
 
+import MapScreen
 import OwnerListingScreen
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -24,6 +27,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
@@ -42,12 +47,15 @@ class MainActivity : ComponentActivity() {
  * Allows the functionality to go to the main ListingsScreen
  * and the OwnerListingScreen (if a listing is clicked)
  * */
+@RequiresApi(Build.VERSION_CODES.O)
 @Preview
 @Composable
 fun MainApp() {
     val navController = rememberNavController()
     var listings by rememberSaveable { mutableStateOf<List<ListingComponent>>(emptyList()) }
     var currentRoute by remember { mutableStateOf("ListingsScreen") }
+    val user = Firebase.auth.currentUser
+    var uid by remember { mutableStateOf<String?>(null) }
 
     // Initialize Retrofit and BackendSchema using the backend URL from Constants
     val retrofit = Retrofit.Builder()
@@ -62,10 +70,17 @@ fun MainApp() {
         }
     }
 
+    LaunchedEffect(user) {
+        if (user != null) {
+            uid = user.uid
+        }
+    }
+
     Scaffold(
         bottomBar = {
             if (currentRoute == "ListingsScreen" ||
                 currentRoute == "SearchScreen" ||
+                currentRoute == "MapScreen" ||
                 currentRoute == "ProfileScreen") {
                 BottomNavigationBar(navController)
             }
@@ -86,6 +101,9 @@ fun MainApp() {
             }
             composable("CreateListingScreen") {  // Add this line for CreateAccount
                 CreateListingScreen(navController = navController)
+            }
+            composable("MapScreen") {
+                MapScreen()
             }
             composable("EditListingScreen/{listingId}") { backStackEntry ->
                 val listingId = backStackEntry.arguments?.getString("listingId")?.toIntOrNull() ?: -1
@@ -130,7 +148,7 @@ fun MainApp() {
                 if (selectedListing != null) {
                     // Pass the selected listing to the OwnerListingScreen
                     selectedListing.let {
-                        val isOwner = userToken != null
+                        val isOwner = uid == selectedListing.uid
                         OwnerListingScreen(listing = it, navController = navController, isOwner = isOwner)
                     }
 
@@ -186,6 +204,17 @@ fun BottomNavigationBar(navController: NavHostController) {
                         popUpTo(navController.graph.startDestinationId)
                         launchSingleTop = true
                     }
+                }
+            }
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.LocationOn, contentDescription = "Map") },
+            label = { Text("Map") },
+            selected = currentDestination != null && currentDestination.route == "MapScreen",
+            onClick = {
+                navController.navigate("MapScreen") {
+                    popUpTo(navController.graph.startDestinationId)
+                    launchSingleTop = true
                 }
             }
         )

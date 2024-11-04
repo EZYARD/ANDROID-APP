@@ -36,6 +36,7 @@ import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.tasks.await
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.Color
+import com.example.sprint0backend.BackendWrapper.Companion.testAuth
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
@@ -112,6 +113,7 @@ fun LoginScreen(navController: NavHostController) {
                                 if (task.isSuccessful) {
                                     // Store the token
                                     userToken = task.result?.token
+                                    testAuth(userToken!!, onSuccess = { println(it) }, onError = { println(it) })
                                     // Navigate to ProfileScreen
                                     navController.navigate("ProfileScreen")
                                 } else {
