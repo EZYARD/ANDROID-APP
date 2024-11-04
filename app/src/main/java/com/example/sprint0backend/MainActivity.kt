@@ -1,5 +1,6 @@
 package com.example.sprint0backend
 
+import MapScreen
 import OwnerListingScreen
 import android.os.Build
 import android.os.Bundle
@@ -79,6 +80,7 @@ fun MainApp() {
         bottomBar = {
             if (currentRoute == "ListingsScreen" ||
                 currentRoute == "SearchScreen" ||
+                currentRoute == "MapScreen" ||
                 currentRoute == "ProfileScreen") {
                 BottomNavigationBar(navController)
             }
@@ -99,6 +101,9 @@ fun MainApp() {
             }
             composable("CreateListingScreen") {  // Add this line for CreateAccount
                 CreateListingScreen(navController = navController)
+            }
+            composable("MapScreen") {
+                MapScreen()
             }
             composable("EditListingScreen/{listingId}") { backStackEntry ->
                 val listingId = backStackEntry.arguments?.getString("listingId")?.toIntOrNull() ?: -1
@@ -199,6 +204,17 @@ fun BottomNavigationBar(navController: NavHostController) {
                         popUpTo(navController.graph.startDestinationId)
                         launchSingleTop = true
                     }
+                }
+            }
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.LocationOn, contentDescription = "Map") },
+            label = { Text("Map") },
+            selected = currentDestination != null && currentDestination.route == "MapScreen",
+            onClick = {
+                navController.navigate("MapScreen") {
+                    popUpTo(navController.graph.startDestinationId)
+                    launchSingleTop = true
                 }
             }
         )

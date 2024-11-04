@@ -29,6 +29,8 @@ data class ListingComponent(
     val startTime: String,
     val endTime: String,
     val reviews: String?,
+    val longitude: Double?,
+    val latitude: Double?,
     val uid: String?
 )
 
