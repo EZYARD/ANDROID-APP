@@ -133,17 +133,7 @@ fun LoginScreen(navController: NavHostController) {
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            TextButton(onClick = {
-                // Send password reset email
-                coroutineScope.launch {
-                    try {
-                        Firebase.auth.sendPasswordResetEmail(email).await()
-                        errorMessage = "Password reset email sent. Please check your inbox."
-                    } catch (e: Exception) {
-                        errorMessage = e.localizedMessage
-                    }
-                }
-            }) {
+            TextButton(onClick = { navController.navigate("ForgotPasswordScreen") }) {
                 Text(text = "Forgot Password?")
             }
 

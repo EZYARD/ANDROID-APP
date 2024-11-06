@@ -33,6 +33,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 class MainActivity : ComponentActivity() {
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -102,6 +103,10 @@ fun MainApp() {
             composable("CreateListingScreen") {  // Add this line for CreateAccount
                 CreateListingScreen(navController = navController)
             }
+            composable("ForgotPasswordScreen") {
+                ForgotPasswordScreen(navController = navController)
+            }
+
             composable("MapScreen") {
                 MapScreen()
             }
