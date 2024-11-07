@@ -45,8 +45,8 @@ fun CreateListingScreen(navController: NavHostController) {
 //tuesday and days vals are for attempting to implement a way of showing which day of the week it is
     val tuesday = "tuesday"
     val days = arrayListOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
-    val dateFormatter = DateTimeFormatter.ofPattern("M-d h:mm a")
-    val calendar = Calendar.getInstance()
+    val dateFormatter = DateTimeFormatter.ofPattern("EEEE, M-d h:mm a")
+    val calendar = Calendar.getInstance()g
 
     Scaffold(
         topBar = {
