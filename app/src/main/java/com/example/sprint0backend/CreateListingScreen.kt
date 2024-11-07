@@ -42,11 +42,8 @@ fun CreateListingScreen(navController: NavHostController) {
     var startDateTime by remember { mutableStateOf<LocalDateTime?>(null) }
     var endDateTime by remember { mutableStateOf<LocalDateTime?>(null) }
 
-//tuesday and days vals are for attempting to implement a way of showing which day of the week it is
-    val tuesday = "tuesday"
-    val days = arrayListOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
     val dateFormatter = DateTimeFormatter.ofPattern("EEEE, M-d h:mm a")
-    val calendar = Calendar.getInstance()g
+    val calendar = Calendar.getInstance()
 
     Scaffold(
         topBar = {
