@@ -42,9 +42,7 @@ fun CreateListingScreen(navController: NavHostController) {
     var startDateTime by remember { mutableStateOf<LocalDateTime?>(null) }
     var endDateTime by remember { mutableStateOf<LocalDateTime?>(null) }
 
-//  this is the original format used prior to sprint 3
-//  val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
-    val dateFormatter = DateTimeFormatter.ofPattern("MM-dd HH:mm")
+    val dateFormatter = DateTimeFormatter.ofPattern("MM-dd HH:mm a")
     val calendar = Calendar.getInstance()
 
     Scaffold(
