@@ -1,11 +1,14 @@
 package com.example.sprint0backend
 
+import okhttp3.MultipartBody
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
+import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.PUT
+import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -73,18 +76,19 @@ interface BackendSchema {
     @PUT("listings/update/{listing_id}")
     fun updateListing(
         @Path("listing_id") listingId: Int,
-        @Query("name") name: String,
-        @Query("streetNumber") streetNumber: Int,
-        @Query("streetName") streetName: String,
-        @Query("city") city: String,
-        @Query("state") state: String,
-        @Query("zipcode") zipcode: Int,
-        @Query("description") description: String,
+        @Query("name") name: String?,
+        @Query("streetNumber") streetNumber: Int?,
+        @Query("streetName") streetName: String?,
+        @Query("city") city: String?,
+        @Query("state") state: String?,
+        @Query("zipcode") zipcode: Int?,
+        @Query("description") description: String?,
         @Query("tags") tags: String?,
         @Query("priceRange") priceRange: String?,
         @Query("rating") rating: String?,
         @Query("reviews") reviews: String?
     ): Call<Void>
+
 
     @GET("/testAuth")
     fun testAuth(@Header("Authorization") authHeader: String): Call<String>
@@ -100,4 +104,11 @@ interface BackendSchema {
         @Query("location") location: String,
         @Query("radius") range: Float
     ): Call<List<RangeListingResponse>>
+
+    @Multipart
+    @POST("images/upload")
+    fun uploadImage(
+        @Part("listing_id") listingId: Int,
+        @Part file: MultipartBody.Part
+    ): Call<ImageResponse>
 }

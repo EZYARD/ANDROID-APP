@@ -27,10 +27,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+
+data class User(
+    val uid: String,
+    val token: String
+)
 
 class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
@@ -44,10 +47,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-/**
- * Allows the functionality to go to the main ListingsScreen
- * and the OwnerListingScreen (if a listing is clicked)
- * */
 @RequiresApi(Build.VERSION_CODES.O)
 @Preview
 @Composable
@@ -55,25 +54,27 @@ fun MainApp() {
     val navController = rememberNavController()
     var listings by rememberSaveable { mutableStateOf<List<ListingComponent>>(emptyList()) }
     var currentRoute by remember { mutableStateOf("ListingsScreen") }
-    val user = Firebase.auth.currentUser
-    var uid by remember { mutableStateOf<String?>(null) }
+    var user by rememberSaveable { mutableStateOf<User?>(null) }
 
     // Initialize Retrofit and BackendSchema using the backend URL from Constants
     val retrofit = Retrofit.Builder()
-        .baseUrl(Constants().BACKEND_URL) // Use the BACKEND_URL from Constants
+        .baseUrl(Constants().BACKEND_URL)
         .addConverterFactory(GsonConverterFactory.create())
         .build()
     val backendService = retrofit.create(BackendSchema::class.java)
 
-    LaunchedEffect(navController) {
-        navController.addOnDestinationChangedListener { _, destination, _ ->
-            currentRoute = destination.route ?: "ListingsScreen"
-        }
-    }
-
-    LaunchedEffect(user) {
-        if (user != null) {
-            uid = user.uid
+    LaunchedEffect(Unit) {
+        FirebaseAuth.getInstance().addAuthStateListener { firebaseAuth ->
+            val firebaseUser = firebaseAuth.currentUser
+            if (firebaseUser != null) {
+                firebaseUser.getIdToken(true).addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        user = User(uid = firebaseUser.uid, token = task.result?.token ?: "")
+                    }
+                }
+            } else {
+                user = null
+            }
         }
     }
 
@@ -103,10 +104,6 @@ fun MainApp() {
             composable("CreateListingScreen") {  // Add this line for CreateAccount
                 CreateListingScreen(navController = navController)
             }
-            composable("ForgotPasswordScreen") {
-                ForgotPasswordScreen(navController = navController)
-            }
-
             composable("MapScreen") {
                 MapScreen()
             }
@@ -123,9 +120,7 @@ fun MainApp() {
                     }
                 )
 
-                // Check if listings have been loaded and if the selected listing exists
                 val selectedListing = listings.find { it.id == listingId }
-
                 if (selectedListing != null) {
                     EditListingScreen(
                         listing = selectedListing,
@@ -147,19 +142,12 @@ fun MainApp() {
                     }
                 )
 
-                // Check if listings have been loaded and if the selected listing exists
                 val selectedListing = listings.find { it.id == listingId }
-
                 if (selectedListing != null) {
-                    // Pass the selected listing to the OwnerListingScreen
-                    selectedListing.let {
-                        val isOwner = uid == selectedListing.uid
-                        OwnerListingScreen(listing = it, navController = navController, isOwner = isOwner)
-                    }
-
-                    //OwnerListingScreen(listing = selectedListing, navController = navController, isOwner = true)
+                    // Check if the logged-in user is the owner
+                    val isOwner = user?.uid == selectedListing.uid
+                    OwnerListingScreen(listing = selectedListing, navController = navController, isOwner = isOwner)
                 } else {
-                    // Show error message or fallback
                     Text(text = errorMessage ?: "Loading...", modifier = Modifier.fillMaxSize())
                 }
             }
@@ -167,16 +155,11 @@ fun MainApp() {
     }
 }
 
-/**
- * This will add a navigation bar at the bottom of the screen
- *
- * For now, 'ListingsScreen' has the 'home' icon
- * */
 @Composable
 fun BottomNavigationBar(navController: NavHostController) {
     val currentDestination = navController.currentDestination
-    val auth = FirebaseAuth.getInstance() // Initialize FirebaseAuth
-    val user = auth.currentUser // Get the current user
+    val auth = FirebaseAuth.getInstance()
+    val user = auth.currentUser
 
     NavigationBar(
         containerColor = Color.LightGray
@@ -198,13 +181,11 @@ fun BottomNavigationBar(navController: NavHostController) {
             selected = currentDestination != null && currentDestination.route == "ProfileScreen",
             onClick = {
                 if (user != null) {
-                    // If user is signed in, navigate to ProfileScreen
                     navController.navigate("ProfileScreen") {
                         popUpTo(navController.graph.startDestinationId)
                         launchSingleTop = true
                     }
                 } else {
-                    // If user is not signed in, navigate to LoginScreen
                     navController.navigate("LoginScreen") {
                         popUpTo(navController.graph.startDestinationId)
                         launchSingleTop = true
