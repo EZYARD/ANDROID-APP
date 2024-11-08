@@ -73,7 +73,7 @@ interface BackendSchema {
     @GET("images/{id}")
     fun getListingImages(@Path("id") listingId: Int): Call<List<ImageResponse>>
 
-    @PUT("listings/update/{listing_id}")
+    @PUT("/listings/update/{listing_id}")
     fun updateListing(
         @Path("listing_id") listingId: Int,
         @Query("name") name: String?,

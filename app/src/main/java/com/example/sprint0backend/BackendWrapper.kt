@@ -121,5 +121,52 @@ class BackendWrapper {
                 }
             })
         }
+
+        fun updateListing(
+            listingId: Int,
+            name: String?,
+            streetNumber: Int?,
+            streetName: String?,
+            city: String?,
+            state: String?,
+            zipcode: Int?,
+            description: String?,
+            tags: String?,
+            priceRange: String?,
+            rating: String?,
+            reviews: String?,
+            onSuccess: () -> Unit,
+            onError: (String) -> Unit
+        ) {
+            val call = RetrofitInstance.api.updateListing(
+                listingId = listingId,
+                name = name,
+                streetNumber = streetNumber,
+                streetName = streetName,
+                city = city,
+                state = state,
+                zipcode = zipcode,
+                description = description,
+                tags = tags,
+                priceRange = priceRange,
+                rating = rating,
+                reviews = reviews
+            )
+
+            call.enqueue(object : Callback<Void> {
+                override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                    if (response.isSuccessful) {
+                        onSuccess()
+                    } else {
+                        onError("Failed to update listing: ${response.errorBody()?.string()}")
+                    }
+                }
+
+                override fun onFailure(call: Call<Void>, t: Throwable) {
+                    onError("Network error: ${t.message}")
+                }
+            })
+        }
+
     }
 }
