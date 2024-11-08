@@ -42,8 +42,7 @@ fun CreateListingScreen(navController: NavHostController) {
     var startDateTime by remember { mutableStateOf<LocalDateTime?>(null) }
     var endDateTime by remember { mutableStateOf<LocalDateTime?>(null) }
 
-
-    val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+    val dateFormatter = DateTimeFormatter.ofPattern("EEEE, MMM d h:mm a")
     val calendar = Calendar.getInstance()
 
     Scaffold(
@@ -91,7 +90,7 @@ fun CreateListingScreen(navController: NavHostController) {
                 }
                 startDateTime?.let {
                     Text(
-                        "Start: ${it.format(dateFormatter)}",
+                        "${it.format(dateFormatter)}",
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(start = 8.dp)
                     )
@@ -112,7 +111,7 @@ fun CreateListingScreen(navController: NavHostController) {
                 }
                 endDateTime?.let {
                     Text(
-                        "End: ${it.format(dateFormatter)}",
+                        "${it.format(dateFormatter)}",
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(start = 8.dp)
                     )
