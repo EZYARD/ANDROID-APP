@@ -1,8 +1,14 @@
 package com.example.sprint0backend
 
 import android.annotation.SuppressLint
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
@@ -11,12 +17,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import com.example.sprint0backend.BackendWrapper.Companion.getFilePathFromUri
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter", "UnrememberedMutableState")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -86,15 +93,24 @@ fun EditListingScreen(
                 .padding(paddingValues)
                 .padding(16.dp)
                 .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
         ) {
+            // Display images at the top
+            ImageSection(
+                listingId = listing.id,
+                navController = navController
+            )
+
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Display the text fields below images
             ListingTextField(label = "Name", value = name, onValueChange = { name = it })
             ListingTextField(label = "Description", value = description, onValueChange = { description = it })
             ListingTextField(label = "City", value = city, onValueChange = { city = it })
             ListingTextField(label = "State", value = state, onValueChange = { state = it })
             ListingTextField(label = "Zip Code", value = zipcode, onValueChange = { zipcode = it }, keyboardType = KeyboardType.Number)
             ListingTextField(label = "Price Range", value = priceRange, onValueChange = { priceRange = it }, keyboardType = KeyboardType.Number)
-            ListingTextField(label = "Rating", value = rating, onValueChange = { rating = it })
-            ListingTextField(label = "Reviews", value = reviews, onValueChange = { reviews = it })
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -161,25 +177,108 @@ fun ListingTextField(
     )
 }
 
-/**
- * As of right now, this function isn't used.
- *
- * This would contain the implementation to upload
- * and change the images of the listing
- * */
-@Composable
-fun ImageSection() {
-    Text("Images", style = MaterialTheme.typography.bodyMedium)
-    Text("[IMAGES DISPLAYED HERE]", color = Color.Gray, modifier = Modifier.padding(8.dp))
 
-    TextButton(
-        onClick = { /* Does nothing right now*/ },
-        enabled = false,
-        modifier = Modifier.padding(vertical = 8.dp)
-    ) {
-        Text("Edit Images (WIP)")
+@Composable
+fun ImageSection(
+    listingId: Int,
+    navController: NavHostController // Pass NavController to handle navigation refresh
+) {
+    val context = LocalContext.current
+    var selectedImagePath by remember { mutableStateOf<String?>(null) }
+    var uploadMessage by remember { mutableStateOf<String?>(null) }
+    var listingImages by remember { mutableStateOf<List<String>>(emptyList()) }
+    var isUploading by remember { mutableStateOf(false) }
+
+    // Load existing images
+    LaunchedEffect(listingId) {
+        BackendWrapper.getImageUrlsForListing(
+            listingId = listingId,
+            onSuccess = { images ->
+                listingImages = images
+            },
+            onError = { error ->
+                uploadMessage = "Failed to load images: $error"
+            }
+        )
+    }
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let {
+            selectedImagePath = getFilePathFromUri(context, uri)
+            uploadMessage = null
+        }
+    }
+
+    Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+        Text("Images", style = MaterialTheme.typography.bodyMedium)
+
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(vertical = 8.dp)
+        ) {
+            items(listingImages) { imageUrl ->
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(imageUrl)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = "Listing Image",
+                    modifier = Modifier
+                        .size(250.dp)
+                        .aspectRatio(1.5f)
+                        .padding(4.dp)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        TextButton(onClick = { launcher.launch("image/*") }) {
+            Text("Choose Image from Gallery")
+        }
+
+        selectedImagePath?.let { path ->
+            val fileName = path.substringAfterLast('/')
+            Text("Selected Image: $fileName", style = MaterialTheme.typography.bodyMedium)
+
+
+            Button(onClick = {
+                isUploading = true
+                selectedImagePath?.let { filePath ->
+                    BackendWrapper.uploadListingImage(
+                        listingId = listingId,
+                        filePath = filePath,
+                        onSuccess = { response ->
+                            uploadMessage = "Image uploaded successfully!"
+                            selectedImagePath = null
+                            isUploading = false
+
+                            navController.navigate("EditListingScreen/$listingId") {
+                                popUpTo("EditListingScreen/$listingId") { inclusive = true }
+                            }
+                        },
+                        onError = { error ->
+                            uploadMessage = "Failed to upload image: $error"
+                            isUploading = false
+                        }
+                    )
+                }
+            }) {
+                Text("Upload Image")
+            }
+        }
+
+        uploadMessage?.let { message ->
+            Text(message, color = Color.Green, style = MaterialTheme.typography.bodyMedium)
+        }
     }
 }
+
+
+
+
 
 @Composable
 fun UnsavedChangesDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
