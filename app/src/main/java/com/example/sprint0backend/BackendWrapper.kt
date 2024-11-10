@@ -1,8 +1,18 @@
 package com.example.sprint0backend
 
+import android.content.Context
+import android.database.Cursor
+import android.net.Uri
+import android.os.Build
+import android.provider.MediaStore
+import android.provider.OpenableColumns
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.io.File
 
 class BackendWrapper {
     companion object {
@@ -121,5 +131,113 @@ class BackendWrapper {
                 }
             })
         }
+
+        fun updateListing(
+            listingId: Int,
+            name: String?,
+            streetNumber: Int?,
+            streetName: String?,
+            city: String?,
+            state: String?,
+            zipcode: Int?,
+            description: String?,
+            tags: String?,
+            priceRange: String?,
+            rating: String?,
+            reviews: String?,
+            onSuccess: () -> Unit,
+            onError: (String) -> Unit
+        ) {
+            val call = RetrofitInstance.api.updateListing(
+                listingId = listingId,
+                name = name,
+                streetNumber = streetNumber,
+                streetName = streetName,
+                city = city,
+                state = state,
+                zipcode = zipcode,
+                description = description,
+                tags = tags,
+                priceRange = priceRange,
+                rating = rating,
+                reviews = reviews
+            )
+
+            call.enqueue(object : Callback<Void> {
+                override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                    if (response.isSuccessful) {
+                        onSuccess()
+                    } else {
+                        onError("Failed to update listing: ${response.errorBody()?.string()}")
+                    }
+                }
+
+                override fun onFailure(call: Call<Void>, t: Throwable) {
+                    onError("Network error: ${t.message}")
+                }
+            })
+        }
+
+        fun uploadListingImage(
+            listingId: Int,
+            filePath: String,
+            onSuccess: (ImageResponse) -> Unit,
+            onError: (String) -> Unit
+        ) {
+            try {
+                val file = File(filePath)
+                val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
+                val body = MultipartBody.Part.createFormData("file", file.name, requestFile)
+
+                val call = RetrofitInstance.api.uploadImage(
+                    listingId = listingId,
+                    file = body
+                )
+
+                call.enqueue(object : Callback<ImageResponse> {
+                    override fun onResponse(call: Call<ImageResponse>, response: Response<ImageResponse>) {
+                        if (response.isSuccessful) {
+                            response.body()?.let { onSuccess(it) }
+                        } else {
+                            onError("Failed to upload image: ${response.errorBody()?.string()}")
+                        }
+                    }
+
+                    override fun onFailure(call: Call<ImageResponse>, t: Throwable) {
+                        onError("Network error: ${t.message}")
+                    }
+                })
+            } catch (e: Exception) {
+                onError("Error preparing file for upload: ${e.message}")
+            }
+        }
+
+
+        /**
+         * Helper function to retrieve the file path from a URI(images, videos, or documents)
+         */
+        fun getFilePathFromUri(context: Context, uri: Uri): String? {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                    val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
+                    cursor.moveToFirst()
+                    val fileName = cursor.getString(nameIndex)
+                    val fileSize = cursor.getLong(sizeIndex)
+                }
+            }
+
+            var filePath: String? = null
+            val projection = arrayOf(MediaStore.Images.Media.DATA)
+            val cursor: Cursor? = context.contentResolver.query(uri, projection, null, null, null)
+            cursor?.use {
+                if (it.moveToFirst()) {
+                    val columnIndex = it.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
+                    filePath = it.getString(columnIndex)
+                }
+            }
+            return filePath
+        }
+
     }
 }

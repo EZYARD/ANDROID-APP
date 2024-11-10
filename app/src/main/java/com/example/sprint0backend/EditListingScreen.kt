@@ -1,8 +1,14 @@
 package com.example.sprint0backend
 
 import android.annotation.SuppressLint
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
@@ -11,36 +17,39 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import com.example.sprint0backend.BackendWrapper.Companion.getFilePathFromUri
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter", "UnrememberedMutableState")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditListingScreen(listing: ListingComponent, navController: NavHostController, backendService: BackendSchema) {
+fun EditListingScreen(
+    listing: ListingComponent,
+    navController: NavHostController,
+    backendService: BackendSchema
+) {
     var name by remember { mutableStateOf(listing.name) }
     var description by remember { mutableStateOf(listing.description) }
     var city by remember { mutableStateOf(listing.city) }
     var state by remember { mutableStateOf(listing.state) }
     var zipcode by remember { mutableStateOf(listing.zipcode.toString()) }
-    var priceRange by remember { mutableStateOf(listing.priceRange.toString()) }
-//    var tags by remember { mutableStateOf(listing.tags) }
-
+    var priceRange by remember { mutableStateOf(listing.priceRange ?: "") }
+    var rating by remember { mutableStateOf(listing.rating ?: "") }
+    var reviews by remember { mutableStateOf(listing.reviews ?: "") }
     var selectedTags by remember { mutableStateOf(listing.tags.split(", ").toSet()) }
     val availableTags = listOf("Clothing", "Electronics", "Toys", "Books", "Miscellaneous")
     var showTagDialog by remember { mutableStateOf(false) }
-
     var showPrompt by remember { mutableStateOf(false) }
-    var originalValues = remember(listing) {
-        listOf(listing.name, listing.description, listing.city, listing.state, listing.zipcode.toString(), listing.priceRange.toString(), listing.tags)
-    }
 
     val hasChanges by derivedStateOf {
-        listOf(name, description, city, state, zipcode, priceRange, selectedTags.joinToString(", ")) != originalValues    }
+        listOf(name, description, city, state, zipcode, priceRange, selectedTags.joinToString(", ")) !=
+                listOf(listing.name, listing.description, listing.city, listing.state, listing.zipcode.toString(), listing.priceRange ?: "", listing.tags)
+    }
 
     Scaffold(
         topBar = {
@@ -56,27 +65,22 @@ fun EditListingScreen(listing: ListingComponent, navController: NavHostControlle
                 actions = {
                     TextButton(onClick = {
                         val tagsString = selectedTags.joinToString(", ")
-                        originalValues = listOf(name, description, city, state, zipcode, priceRange, tagsString)
-                        // save logic goes here in the future
-                        listing.reviews?.let {
-                            saveListingChanges(
-                                backendService = backendService,
-                                listingId = listing.id,
-                                name = name,
-                                streetNumber = listing.streetNumber.toString(),
-                                streetName = listing.streetName,
-                                city = city,
-                                state = state,
-                                zipcode = zipcode.toIntOrNull() ?: 0,
-                                description = description,
-                                tags = tagsString,
-                                priceRange = (priceRange.toIntOrNull() ?: 0).toString(),
-                                rating = listing.rating.toString(),
-                                reviews = it,
-                                navController = navController,
-                                onSaveFailure = { showPrompt = true }
-                            )
-                        }
+                        BackendWrapper.updateListing(
+                            listingId = listing.id,
+                            name = name.takeIf { it.isNotBlank() },
+                            streetNumber = listing.streetNumber.takeIf { it != 0 },
+                            streetName = listing.streetName.takeIf { it.isNotBlank() },
+                            city = city.takeIf { it.isNotBlank() },
+                            state = state.takeIf { it.isNotBlank() },
+                            zipcode = zipcode.toIntOrNull(),
+                            description = description.takeIf { it.isNotBlank() },
+                            tags = tagsString.takeIf { it.isNotBlank() },
+                            priceRange = priceRange.takeIf { it.isNotBlank() },
+                            rating = rating.takeIf { it.isNotBlank() },
+                            reviews = reviews.takeIf { it.isNotBlank() },
+                            onSuccess = { navController.popBackStack() },
+                            onError = { showPrompt = true } // Show prompt on failure
+                        )
                     }) {
                         Text("Save", style = MaterialTheme.typography.labelLarge)
                     }
@@ -89,7 +93,18 @@ fun EditListingScreen(listing: ListingComponent, navController: NavHostControlle
                 .padding(paddingValues)
                 .padding(16.dp)
                 .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
         ) {
+            // Display images at the top
+            ImageSection(
+                listingId = listing.id,
+                navController = navController
+            )
+
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Display the text fields below images
             ListingTextField(label = "Name", value = name, onValueChange = { name = it })
             ListingTextField(label = "Description", value = description, onValueChange = { description = it })
             ListingTextField(label = "City", value = city, onValueChange = { city = it })
@@ -141,6 +156,7 @@ fun EditListingScreen(listing: ListingComponent, navController: NavHostControlle
     }
 }
 
+
 @Composable
 fun ListingTextField(
     label: String,
@@ -161,25 +177,108 @@ fun ListingTextField(
     )
 }
 
-/**
- * As of right now, this function isn't used.
- *
- * This would contain the implementation to upload
- * and change the images of the listing
- * */
-@Composable
-fun ImageSection() {
-    Text("Images", style = MaterialTheme.typography.bodyMedium)
-    Text("[IMAGES DISPLAYED HERE]", color = Color.Gray, modifier = Modifier.padding(8.dp))
 
-    TextButton(
-        onClick = { /* Does nothing right now*/ },
-        enabled = false,
-        modifier = Modifier.padding(vertical = 8.dp)
-    ) {
-        Text("Edit Images (WIP)")
+@Composable
+fun ImageSection(
+    listingId: Int,
+    navController: NavHostController // Pass NavController to handle navigation refresh
+) {
+    val context = LocalContext.current
+    var selectedImagePath by remember { mutableStateOf<String?>(null) }
+    var uploadMessage by remember { mutableStateOf<String?>(null) }
+    var listingImages by remember { mutableStateOf<List<String>>(emptyList()) }
+    var isUploading by remember { mutableStateOf(false) }
+
+    // Load existing images
+    LaunchedEffect(listingId) {
+        BackendWrapper.getImageUrlsForListing(
+            listingId = listingId,
+            onSuccess = { images ->
+                listingImages = images
+            },
+            onError = { error ->
+                uploadMessage = "Failed to load images: $error"
+            }
+        )
+    }
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let {
+            selectedImagePath = getFilePathFromUri(context, uri)
+            uploadMessage = null
+        }
+    }
+
+    Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+        Text("Images", style = MaterialTheme.typography.bodyMedium)
+
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(vertical = 8.dp)
+        ) {
+            items(listingImages) { imageUrl ->
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(imageUrl)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = "Listing Image",
+                    modifier = Modifier
+                        .size(250.dp)
+                        .aspectRatio(1.5f)
+                        .padding(4.dp)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        TextButton(onClick = { launcher.launch("image/*") }) {
+            Text("Choose Image from Gallery")
+        }
+
+        selectedImagePath?.let { path ->
+            val fileName = path.substringAfterLast('/')
+            Text("Selected Image: $fileName", style = MaterialTheme.typography.bodyMedium)
+
+
+            Button(onClick = {
+                isUploading = true
+                selectedImagePath?.let { filePath ->
+                    BackendWrapper.uploadListingImage(
+                        listingId = listingId,
+                        filePath = filePath,
+                        onSuccess = { response ->
+                            uploadMessage = "Image uploaded successfully!"
+                            selectedImagePath = null
+                            isUploading = false
+
+                            navController.navigate("EditListingScreen/$listingId") {
+                                popUpTo("EditListingScreen/$listingId") { inclusive = true }
+                            }
+                        },
+                        onError = { error ->
+                            uploadMessage = "Failed to upload image: $error"
+                            isUploading = false
+                        }
+                    )
+                }
+            }) {
+                Text("Upload Image")
+            }
+        }
+
+        uploadMessage?.let { message ->
+            Text(message, color = Color.Green, style = MaterialTheme.typography.bodyMedium)
+        }
     }
 }
+
+
+
+
 
 @Composable
 fun UnsavedChangesDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
@@ -194,53 +293,4 @@ fun UnsavedChangesDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
             TextButton(onClick = onDismiss) { Text("No") }
         }
     )
-}
-
-fun saveListingChanges(
-    backendService: BackendSchema,
-    listingId: Int,
-    name: String,
-    streetNumber: String,
-    streetName: String,
-    city: String,
-    state: String,
-    zipcode: Int,
-    description: String,
-    tags: String,
-    priceRange: String,
-    rating: String,
-    reviews: String,
-    navController: NavHostController,
-    onSaveFailure: () -> Unit
-) {
-    val parsedStreetNumber = streetNumber.toIntOrNull() ?: 0
-
-    val call = backendService.updateListing(
-        listingId = listingId,
-        name = name,
-        streetNumber = parsedStreetNumber,
-        streetName = streetName,
-        city = city,
-        state = state,
-        zipcode = zipcode,
-        description = description,
-        tags = tags.ifEmpty { null },
-        priceRange = priceRange.ifEmpty { null },
-        rating = rating.ifEmpty { null },
-        reviews = reviews.ifEmpty { null }
-    )
-
-    call.enqueue(object : Callback<Void> {
-        override fun onResponse(call: Call<Void>, response: Response<Void>) {
-            if (response.isSuccessful) {
-                navController.popBackStack()
-            } else {
-                onSaveFailure()
-            }
-        }
-
-        override fun onFailure(call: Call<Void>, t: Throwable) {
-            onSaveFailure()
-        }
-    })
 }
