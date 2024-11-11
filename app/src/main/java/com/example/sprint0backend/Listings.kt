@@ -3,7 +3,10 @@ package com.example.sprint0backend
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -54,6 +57,7 @@ suspend fun saveImageToLocalStorage(
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun Listings(listing: ListingComponent, navController: NavHostController, distance: Float?) {
     val coroutineScope = rememberCoroutineScope()
@@ -105,27 +109,46 @@ fun Listings(listing: ListingComponent, navController: NavHostController, distan
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Column(modifier = Modifier.padding(8.dp)) {
-            if (imageFile != null) {
-                Image(
-                    painter = rememberAsyncImagePainter(model = imageFile),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(250.dp),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
+            // Display Image
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(250.dp)
+            ) {
+                if (imageFile != null) {
+                    Image(
+                        painter = rememberAsyncImagePainter(model = imageFile),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(250.dp),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(250.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+
+                // Position Countdown Timer in the top-right corner
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(250.dp),
-                    contentAlignment = Alignment.Center
+                        .align(Alignment.TopEnd) // Position in the top-right corner
+                        .padding(8.dp)
+                        .background(Color.DarkGray.copy(alpha = 0.7f), shape = RoundedCornerShape(4.dp)) // Darker background
+                        .padding(horizontal = 12.dp, vertical = 6.dp)  // Smaller padding to shrink the box size
                 ) {
-                    CircularProgressIndicator()
+                    CountdownTimer(startTime = listing.startTime) // Add the countdown timer here
                 }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
+
 
             // Display listing details as text below the image
             Text(text = "Name: ${listing.name}", style = MaterialTheme.typography.bodyMedium)
