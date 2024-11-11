@@ -28,7 +28,7 @@ import kotlinx.coroutines.tasks.await
 
 @Composable
 fun ProfileScreen(navController: NavHostController) {
-    // Get the current user from Firebase Auth
+    // Get the current user from Firebase Auth directly
     val user = Firebase.auth.currentUser
     val coroutineScope = rememberCoroutineScope()
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -88,12 +88,10 @@ fun ProfileScreen(navController: NavHostController) {
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
 
-
                 // Sign Out Button
                 Button(onClick = {
-                    Firebase.auth.signOut()
-                    userToken = null
-                    navController.navigate("LoginScreen")
+                    Firebase.auth.signOut()  // Log the user out
+                    navController.navigate("LoginScreen")  // Navigate to Login screen
                 }) {
                     Text(text = "Sign Out")
                 }
