@@ -57,6 +57,22 @@ fun CreateAccount(navController: NavHostController) {
         }
 
         Button(onClick = {
+            // Validate email and password
+            if (email.isBlank() || password.isBlank()) {
+                errorMessage = "Please fill in both fields."
+                return@Button
+            }
+
+            if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                errorMessage = "Please enter a valid email address."
+                return@Button
+            }
+
+            if (password.length < 6) {
+                errorMessage = "Password must be at least 6 characters."
+                return@Button
+            }
+
             // Create account logic
             val auth = Firebase.auth
             auth.createUserWithEmailAndPassword(email, password)
@@ -73,12 +89,11 @@ fun CreateAccount(navController: NavHostController) {
                                 navController.navigate("ProfileScreen")
                             } else {
                                 // Handle token retrieval error
-                                errorMessage = task.exception?.localizedMessage
+                                errorMessage = task2.exception?.localizedMessage
                             }
                         }
-                        // Navigate to the profile screen after successful account creation
-                        navController.navigate("ProfileScreen")
                     } else {
+                        // Handle account creation failure
                         errorMessage = task.exception?.localizedMessage
                     }
                 }
