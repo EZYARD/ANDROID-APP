@@ -36,7 +36,9 @@ fun ProfileScreen(navController: NavHostController) {
     var uid by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(user) {
-        if (user != null) {
+        if (user == null) {
+            navController.navigate("LoginScreen") // Redirect to login if user is null
+        } else {
             try {
                 userToken = user.getIdToken(true).await().token
                 uid = user.uid

@@ -98,6 +98,9 @@ fun MainApp() {
             composable("LoginScreen") {
                 LoginScreen(navController = navController)
             }
+            composable("ForgotPasswordScreen") {
+                ForgotPasswordScreen(navController = navController)
+            }
             composable("CreateAccount") {  // Add this line for CreateAccount
                 CreateAccount(navController = navController)
             }
