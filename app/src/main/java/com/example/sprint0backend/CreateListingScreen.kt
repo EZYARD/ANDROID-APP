@@ -37,7 +37,7 @@ fun CreateListingScreen(navController: NavHostController) {
     var zipcode by remember { mutableStateOf("") }
     var priceRange by remember { mutableStateOf("") }
     var selectedTags by remember { mutableStateOf(setOf<String>()) }
-    val availableTags = listOf("Clothing", "Electronics", "Toys", "Books", "Miscellaneous")
+    val availableTags = listOf("Clothing", "Electrgonics", "Toys", "Books", "Miscellaneous")
     var showTagDialog by remember { mutableStateOf(false) }
     var startDateTime by remember { mutableStateOf<LocalDateTime?>(null) }
     var endDateTime by remember { mutableStateOf<LocalDateTime?>(null) }
