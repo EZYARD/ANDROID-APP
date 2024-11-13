@@ -66,13 +66,18 @@ fun MainApp() {
     LaunchedEffect(Unit) {
         FirebaseAuth.getInstance().addAuthStateListener { firebaseAuth ->
             val firebaseUser = firebaseAuth.currentUser
-            if (firebaseUser != null) {
-                firebaseUser.getIdToken(true).addOnCompleteListener { task ->
+            firebaseUser?.let {
+                it.getIdToken(true).addOnCompleteListener { task ->
                     if (task.isSuccessful) {
-                        user = User(uid = firebaseUser.uid, token = task.result?.token ?: "")
+                        // Only update user if different or null
+                        val newToken = task.result?.token
+                        if (user?.token != newToken) {
+                            user = User(uid = it.uid, token = newToken ?: "")
+                        }
                     }
                 }
-            } else {
+            } ?: run {
+                // Handle logout, set user to null if the user signs out
                 user = null
             }
         }
