@@ -86,8 +86,11 @@ interface BackendSchema {
         @Query("tags") tags: String?,
         @Query("priceRange") priceRange: String?,
         @Query("rating") rating: String?,
-        @Query("reviews") reviews: String?
+        @Query("reviews") reviews: String?,
+        @Query("startTime") startTime: String?,
+        @Query("endTime") endTime: String?
     ): Call<Void>
+
 
 
     @GET("/testAuth")
