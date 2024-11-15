@@ -145,6 +145,8 @@ class BackendWrapper {
             priceRange: String?,
             rating: String?,
             reviews: String?,
+            startTime: String?, // New parameter
+            endTime: String?,   // New parameter
             onSuccess: () -> Unit,
             onError: (String) -> Unit
         ) {
@@ -160,7 +162,9 @@ class BackendWrapper {
                 tags = tags,
                 priceRange = priceRange,
                 rating = rating,
-                reviews = reviews
+                reviews = reviews,
+                startTime = startTime, // Pass startTime to Retrofit call
+                endTime = endTime      // Pass endTime to Retrofit call
             )
 
             call.enqueue(object : Callback<Void> {
@@ -177,6 +181,7 @@ class BackendWrapper {
                 }
             })
         }
+
 
         fun uploadListingImage(
             listingId: Int,

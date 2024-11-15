@@ -83,18 +83,18 @@ dependencies {
     implementation(libs.coil.compose.v132)
 
     // Firebase
-    implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
-    implementation("com.google.firebase:firebase-auth")
+    implementation(platform(libs.firebase.bom.v3360))
+    implementation(libs.google.firebase.auth)
 
     // Google Play Services and Credentials
-    implementation("androidx.credentials:credentials:1.5.0-alpha06")
-    implementation("androidx.credentials:credentials-play-services-auth:1.5.0-alpha06")
-    implementation("com.google.android.gms:play-services-auth:21.2.0")
-    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.play.services.auth)
+    implementation(libs.googleid)
 
     // Google Maps
-    implementation("com.google.android.gms:play-services-maps:19.0.0")
-    implementation ("com.google.maps.android:maps-compose:2.11.0")
+    implementation(libs.play.services.maps)
+    implementation (libs.maps.compose)
 
 
     // Retrofit for networking

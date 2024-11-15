@@ -3,6 +3,7 @@ package com.example.sprint0backend
 import android.annotation.SuppressLint
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -17,14 +18,26 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.example.sprint0backend.BackendWrapper.Companion.getFilePathFromUri
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
+import android.os.Build
+import androidx.annotation.RequiresApi
+import kotlinx.coroutines.launch
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.Calendar
 
+@RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter", "UnrememberedMutableState")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,13 +55,40 @@ fun EditListingScreen(
     var rating by remember { mutableStateOf(listing.rating ?: "") }
     var reviews by remember { mutableStateOf(listing.reviews ?: "") }
     var selectedTags by remember { mutableStateOf(listing.tags.split(", ").toSet()) }
+
+    // Formatter for parsing the ISO date-time format
+    val dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
+
+    // Formatter for displaying dates in a user-friendly format
+    val displayDateFormatter = DateTimeFormatter.ofPattern("MMM dd, yyyy hh:mm a")
+
+    // Initialize startDateTime and endDateTime with parsing
+    var startDateTime by remember {
+        mutableStateOf(
+            listing.startTime?.let { LocalDateTime.parse(it, dateFormatter) }
+        )
+    }
+    var endDateTime by remember {
+        mutableStateOf(
+            listing.endTime?.let { LocalDateTime.parse(it, dateFormatter) }
+        )
+    }
+
     val availableTags = listOf("Clothing", "Electronics", "Toys", "Books", "Miscellaneous")
     var showTagDialog by remember { mutableStateOf(false) }
     var showPrompt by remember { mutableStateOf(false) }
+    val calendar = Calendar.getInstance()
+
+    // SnackbarHostState for managing the Snackbar
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     val hasChanges by derivedStateOf {
-        listOf(name, description, city, state, zipcode, priceRange, selectedTags.joinToString(", ")) !=
-                listOf(listing.name, listing.description, listing.city, listing.state, listing.zipcode.toString(), listing.priceRange ?: "", listing.tags)
+        listOf(name, description, city, state, zipcode, priceRange, selectedTags.joinToString(", "),
+            startDateTime?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), endDateTime?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        ) != listOf(listing.name, listing.description, listing.city, listing.state, listing.zipcode.toString(),
+            listing.priceRange ?: "", listing.tags, listing.startTime, listing.endTime
+        )
     }
 
     Scaffold(
@@ -78,15 +118,23 @@ fun EditListingScreen(
                             priceRange = priceRange.takeIf { it.isNotBlank() },
                             rating = rating.takeIf { it.isNotBlank() },
                             reviews = reviews.takeIf { it.isNotBlank() },
-                            onSuccess = { navController.popBackStack() },
-                            onError = { showPrompt = true } // Show prompt on failure
+                            startTime = startDateTime?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+                            endTime = endDateTime?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+                            onSuccess = {
+                                scope.launch {
+                                    snackbarHostState.showSnackbar("Listing saved successfully")
+                                    navController.popBackStack()
+                                }
+                            },
+                            onError = { showPrompt = true }
                         )
                     }) {
                         Text("Save", style = MaterialTheme.typography.labelLarge)
                     }
                 }
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) } // Add SnackbarHost to display the Snackbar
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -101,7 +149,6 @@ fun EditListingScreen(
                 navController = navController
             )
 
-
             Spacer(modifier = Modifier.height(16.dp))
 
             // Display the text fields below images
@@ -111,6 +158,48 @@ fun EditListingScreen(
             ListingTextField(label = "State", value = state, onValueChange = { state = it })
             ListingTextField(label = "Zip Code", value = zipcode, onValueChange = { zipcode = it }, keyboardType = KeyboardType.Number)
             ListingTextField(label = "Price Range", value = priceRange, onValueChange = { priceRange = it }, keyboardType = KeyboardType.Number)
+
+            // Start Date/Time Picker
+            Button(
+                onClick = {
+                    DatePickerDialog(navController.context, { _, year, month, day ->
+                        TimePickerDialog(navController.context, { _, hour, minute ->
+                            startDateTime = LocalDateTime.of(year, month + 1, day, hour, minute)
+                        }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true).show()
+                    }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).show()
+                },
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+            ) {
+                Text(text = "Pick Start Date/Time")
+            }
+            startDateTime?.let {
+                Text(
+                    "Start: ${it.format(displayDateFormatter)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
+
+            // End Date/Time Picker
+            Button(
+                onClick = {
+                    DatePickerDialog(navController.context, { _, year, month, day ->
+                        TimePickerDialog(navController.context, { _, hour, minute ->
+                            endDateTime = LocalDateTime.of(year, month + 1, day, hour, minute)
+                        }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true).show()
+                    }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).show()
+                },
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+            ) {
+                Text(text = "Pick End Date/Time")
+            }
+            endDateTime?.let {
+                Text(
+                    "End: ${it.format(displayDateFormatter)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -155,6 +244,7 @@ fun EditListingScreen(
         )
     }
 }
+
 
 
 @Composable
@@ -212,24 +302,43 @@ fun ImageSection(
     }
 
     Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-        Text("Images", style = MaterialTheme.typography.bodyMedium)
-
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(vertical = 8.dp)
-        ) {
-            items(listingImages) { imageUrl ->
-                AsyncImage(
-                    model = ImageRequest.Builder(context)
-                        .data(imageUrl)
-                        .crossfade(true)
-                        .build(),
-                    contentDescription = "Listing Image",
-                    modifier = Modifier
-                        .size(250.dp)
-                        .aspectRatio(1.5f)
-                        .padding(4.dp)
-                )
+        // Image Carousel
+        if (listingImages.isNotEmpty()) {
+            LazyRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(250.dp)
+            ) {
+                items(listingImages) { imageUrl ->
+                    Box(
+                        modifier = Modifier
+                            .padding(4.dp)
+                            .fillMaxHeight()
+                            .width(300.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            painter = rememberAsyncImagePainter(
+                                model = imageUrl,
+                                error = painterResource(R.drawable.placeholder), // Optional placeholder
+                                placeholder = painterResource(R.drawable.placeholder) // Optional placeholder
+                            ),
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                }
+            }
+        } else {
+            // Display a placeholder if there are no images
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(250.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = "No images available")
             }
         }
 
@@ -242,7 +351,6 @@ fun ImageSection(
         selectedImagePath?.let { path ->
             val fileName = path.substringAfterLast('/')
             Text("Selected Image: $fileName", style = MaterialTheme.typography.bodyMedium)
-
 
             Button(onClick = {
                 isUploading = true
@@ -275,10 +383,6 @@ fun ImageSection(
         }
     }
 }
-
-
-
-
 
 @Composable
 fun UnsavedChangesDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
