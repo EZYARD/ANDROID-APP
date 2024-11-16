@@ -104,6 +104,9 @@ fun MainApp() {
             composable("CreateListingScreen") {  // Add this line for CreateAccount
                 CreateListingScreen(navController = navController)
             }
+            composable("ForgotPasswordScreen") {
+                ForgotPasswordScreen(navController = navController)
+            }
             composable("MapScreen") {
                 MapScreen()
             }

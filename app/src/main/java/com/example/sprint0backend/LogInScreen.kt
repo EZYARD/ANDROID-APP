@@ -1,5 +1,6 @@
 package com.example.sprint0backend
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -19,6 +20,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,6 +38,7 @@ import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.tasks.await
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import com.example.sprint0backend.BackendWrapper.Companion.testAuth
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
@@ -48,6 +51,26 @@ fun LoginScreen(navController: NavHostController) {
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     val coroutineScope = rememberCoroutineScope()
+    val sharedPreferences = LocalContext.current.getSharedPreferences("auth", Context.MODE_PRIVATE)
+
+    // Function to save token to SharedPreferences
+    fun saveToken(token: String?) {
+        sharedPreferences.edit().putString("userToken", token).apply()
+    }
+
+    // Function to retrieve token from SharedPreferences
+    fun getToken(): String? {
+        return sharedPreferences.getString("userToken", null)
+    }
+
+    // Retrieve the token if available and navigate accordingly
+    LaunchedEffect(Unit) {
+        val token = getToken()
+        if (token != null) {
+            // If token is found, navigate to ProfileScreen directly
+            navController.navigate("ProfileScreen")
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         // Back Arrow Button
@@ -112,7 +135,9 @@ fun LoginScreen(navController: NavHostController) {
                             mUser?.getIdToken(true)?.addOnCompleteListener { task ->
                                 if (task.isSuccessful) {
                                     // Store the token
-                                    userToken = task.result?.token
+                                    val userToken = task.result?.token
+                                    saveToken(userToken) // Save token to SharedPreferences
+                                    // Use token for authentication or other purposes
                                     testAuth(userToken!!, onSuccess = { println(it) }, onError = { println(it) })
                                     // Navigate to ProfileScreen
                                     navController.navigate("ProfileScreen")
