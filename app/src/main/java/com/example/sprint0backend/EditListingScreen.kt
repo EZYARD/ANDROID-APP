@@ -12,7 +12,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,14 +23,16 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
 import com.example.sprint0backend.BackendWrapper.Companion.getFilePathFromUri
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -52,34 +53,26 @@ fun EditListingScreen(
     var state by remember { mutableStateOf(listing.state) }
     var zipcode by remember { mutableStateOf(listing.zipcode.toString()) }
     var priceRange by remember { mutableStateOf(listing.priceRange ?: "") }
-    var rating by remember { mutableStateOf(listing.rating ?: "") }
-    var reviews by remember { mutableStateOf(listing.reviews ?: "") }
+    val rating by remember { mutableStateOf(listing.rating ?: "") }
+    val reviews by remember { mutableStateOf(listing.reviews ?: "") }
     var selectedTags by remember { mutableStateOf(listing.tags.split(", ").toSet()) }
-
-    // Formatter for parsing the ISO date-time format
     val dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
-
-    // Formatter for displaying dates in a user-friendly format
     val displayDateFormatter = DateTimeFormatter.ofPattern("MMM dd, yyyy hh:mm a")
 
-    // Initialize startDateTime and endDateTime with parsing
     var startDateTime by remember {
         mutableStateOf(
-            listing.startTime?.let { LocalDateTime.parse(it, dateFormatter) }
+            listing.startTime.let { LocalDateTime.parse(it, dateFormatter) }
         )
     }
     var endDateTime by remember {
         mutableStateOf(
-            listing.endTime?.let { LocalDateTime.parse(it, dateFormatter) }
+            listing.endTime.let { LocalDateTime.parse(it, dateFormatter) }
         )
     }
-
     val availableTags = listOf("Clothing", "Electronics", "Toys", "Books", "Miscellaneous")
     var showTagDialog by remember { mutableStateOf(false) }
     var showPrompt by remember { mutableStateOf(false) }
     val calendar = Calendar.getInstance()
-
-    // SnackbarHostState for managing the Snackbar
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
@@ -131,15 +124,18 @@ fun EditListingScreen(
                     }) {
                         Text("Save", style = MaterialTheme.typography.labelLarge)
                     }
-                }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp)
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) } // Add SnackbarHost to display the Snackbar
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .padding(paddingValues)
-                .padding(16.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp)
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
         ) {
@@ -245,8 +241,6 @@ fun EditListingScreen(
     }
 }
 
-
-
 @Composable
 fun ListingTextField(
     label: String,
@@ -267,11 +261,10 @@ fun ListingTextField(
     )
 }
 
-
 @Composable
 fun ImageSection(
     listingId: Int,
-    navController: NavHostController // Pass NavController to handle navigation refresh
+    navController: NavHostController
 ) {
     val context = LocalContext.current
     var selectedImagePath by remember { mutableStateOf<String?>(null) }
@@ -279,7 +272,6 @@ fun ImageSection(
     var listingImages by remember { mutableStateOf<List<String>>(emptyList()) }
     var isUploading by remember { mutableStateOf(false) }
 
-    // Load existing images
     LaunchedEffect(listingId) {
         BackendWrapper.getImageUrlsForListing(
             listingId = listingId,
@@ -301,8 +293,24 @@ fun ImageSection(
         }
     }
 
-    Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-        // Image Carousel
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.inverseSurface,
+                shape = RoundedCornerShape(8.dp)
+            )
+            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(16.dp))
+            .padding(8.dp)
+    ) {
+        Text(
+            text = "Images",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+
         if (listingImages.isNotEmpty()) {
             LazyRow(
                 modifier = Modifier
@@ -320,18 +328,19 @@ fun ImageSection(
                         Image(
                             painter = rememberAsyncImagePainter(
                                 model = imageUrl,
-                                error = painterResource(R.drawable.placeholder), // Optional placeholder
-                                placeholder = painterResource(R.drawable.placeholder) // Optional placeholder
+                                error = painterResource(R.drawable.placeholder),
+                                placeholder = painterResource(R.drawable.placeholder)
                             ),
                             contentDescription = null,
-                            modifier = Modifier.fillMaxSize(),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(RoundedCornerShape(8.dp)),
                             contentScale = ContentScale.Crop
                         )
                     }
                 }
             }
         } else {
-            // Display a placeholder if there are no images
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -358,7 +367,7 @@ fun ImageSection(
                     BackendWrapper.uploadListingImage(
                         listingId = listingId,
                         filePath = filePath,
-                        onSuccess = { response ->
+                        onSuccess = {
                             uploadMessage = "Image uploaded successfully!"
                             selectedImagePath = null
                             isUploading = false
