@@ -3,6 +3,7 @@ package com.example.sprint0backend
 import android.annotation.SuppressLint
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -11,20 +12,33 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
+import coil.compose.rememberAsyncImagePainter
 import com.example.sprint0backend.BackendWrapper.Companion.getFilePathFromUri
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import kotlinx.coroutines.launch
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.Calendar
 
+@RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter", "UnrememberedMutableState")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,16 +53,35 @@ fun EditListingScreen(
     var state by remember { mutableStateOf(listing.state) }
     var zipcode by remember { mutableStateOf(listing.zipcode.toString()) }
     var priceRange by remember { mutableStateOf(listing.priceRange ?: "") }
-    var rating by remember { mutableStateOf(listing.rating ?: "") }
-    var reviews by remember { mutableStateOf(listing.reviews ?: "") }
+    val rating by remember { mutableStateOf(listing.rating ?: "") }
+    val reviews by remember { mutableStateOf(listing.reviews ?: "") }
     var selectedTags by remember { mutableStateOf(listing.tags.split(", ").toSet()) }
+    val dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
+    val displayDateFormatter = DateTimeFormatter.ofPattern("EEEE, MMM d h:mm a")
+
+    var startDateTime by remember {
+        mutableStateOf(
+            listing.startTime.let { LocalDateTime.parse(it, dateFormatter) }
+        )
+    }
+    var endDateTime by remember {
+        mutableStateOf(
+            listing.endTime.let { LocalDateTime.parse(it, dateFormatter) }
+        )
+    }
     val availableTags = listOf("Clothing", "Electronics", "Toys", "Books", "Miscellaneous")
     var showTagDialog by remember { mutableStateOf(false) }
     var showPrompt by remember { mutableStateOf(false) }
+    val calendar = Calendar.getInstance()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     val hasChanges by derivedStateOf {
-        listOf(name, description, city, state, zipcode, priceRange, selectedTags.joinToString(", ")) !=
-                listOf(listing.name, listing.description, listing.city, listing.state, listing.zipcode.toString(), listing.priceRange ?: "", listing.tags)
+        listOf(name, description, city, state, zipcode, priceRange, selectedTags.joinToString(", "),
+            startDateTime?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), endDateTime?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        ) != listOf(listing.name, listing.description, listing.city, listing.state, listing.zipcode.toString(),
+            listing.priceRange ?: "", listing.tags, listing.startTime, listing.endTime
+        )
     }
 
     Scaffold(
@@ -78,20 +111,31 @@ fun EditListingScreen(
                             priceRange = priceRange.takeIf { it.isNotBlank() },
                             rating = rating.takeIf { it.isNotBlank() },
                             reviews = reviews.takeIf { it.isNotBlank() },
-                            onSuccess = { navController.popBackStack() },
-                            onError = { showPrompt = true } // Show prompt on failure
+                            startTime = startDateTime?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+                            endTime = endDateTime?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+                            onSuccess = {
+                                scope.launch {
+                                    snackbarHostState.showSnackbar("Listing saved successfully")
+                                    navController.popBackStack()
+                                }
+                            },
+                            onError = { showPrompt = true }
                         )
                     }) {
                         Text("Save", style = MaterialTheme.typography.labelLarge)
                     }
-                }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp)
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .padding(paddingValues)
-                .padding(16.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp)
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
         ) {
@@ -100,7 +144,6 @@ fun EditListingScreen(
                 listingId = listing.id,
                 navController = navController
             )
-
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -111,6 +154,48 @@ fun EditListingScreen(
             ListingTextField(label = "State", value = state, onValueChange = { state = it })
             ListingTextField(label = "Zip Code", value = zipcode, onValueChange = { zipcode = it }, keyboardType = KeyboardType.Number)
             ListingTextField(label = "Price Range", value = priceRange, onValueChange = { priceRange = it }, keyboardType = KeyboardType.Number)
+
+            // Start Date/Time Picker
+            Button(
+                onClick = {
+                    DatePickerDialog(navController.context, { _, year, month, day ->
+                        TimePickerDialog(navController.context, { _, hour, minute ->
+                            startDateTime = LocalDateTime.of(year, month + 1, day, hour, minute)
+                        }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true).show()
+                    }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).show()
+                },
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+            ) {
+                Text(text = "Pick Start Date/Time")
+            }
+            startDateTime?.let {
+                Text(
+                    "Start: ${it.format(displayDateFormatter)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
+
+            // End Date/Time Picker
+            Button(
+                onClick = {
+                    DatePickerDialog(navController.context, { _, year, month, day ->
+                        TimePickerDialog(navController.context, { _, hour, minute ->
+                            endDateTime = LocalDateTime.of(year, month + 1, day, hour, minute)
+                        }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true).show()
+                    }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).show()
+                },
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+            ) {
+                Text(text = "Pick End Date/Time")
+            }
+            endDateTime?.let {
+                Text(
+                    "End: ${it.format(displayDateFormatter)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -156,7 +241,6 @@ fun EditListingScreen(
     }
 }
 
-
 @Composable
 fun ListingTextField(
     label: String,
@@ -177,11 +261,10 @@ fun ListingTextField(
     )
 }
 
-
 @Composable
 fun ImageSection(
     listingId: Int,
-    navController: NavHostController // Pass NavController to handle navigation refresh
+    navController: NavHostController
 ) {
     val context = LocalContext.current
     var selectedImagePath by remember { mutableStateOf<String?>(null) }
@@ -189,7 +272,6 @@ fun ImageSection(
     var listingImages by remember { mutableStateOf<List<String>>(emptyList()) }
     var isUploading by remember { mutableStateOf(false) }
 
-    // Load existing images
     LaunchedEffect(listingId) {
         BackendWrapper.getImageUrlsForListing(
             listingId = listingId,
@@ -211,25 +293,61 @@ fun ImageSection(
         }
     }
 
-    Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-        Text("Images", style = MaterialTheme.typography.bodyMedium)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.inverseSurface,
+                shape = RoundedCornerShape(8.dp)
+            )
+            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(16.dp))
+            .padding(8.dp)
+    ) {
+        Text(
+            text = "Images",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
 
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(vertical = 8.dp)
-        ) {
-            items(listingImages) { imageUrl ->
-                AsyncImage(
-                    model = ImageRequest.Builder(context)
-                        .data(imageUrl)
-                        .crossfade(true)
-                        .build(),
-                    contentDescription = "Listing Image",
-                    modifier = Modifier
-                        .size(250.dp)
-                        .aspectRatio(1.5f)
-                        .padding(4.dp)
-                )
+        if (listingImages.isNotEmpty()) {
+            LazyRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(250.dp)
+            ) {
+                items(listingImages) { imageUrl ->
+                    Box(
+                        modifier = Modifier
+                            .padding(4.dp)
+                            .fillMaxHeight()
+                            .width(300.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            painter = rememberAsyncImagePainter(
+                                model = imageUrl,
+                                error = painterResource(R.drawable.placeholder),
+                                placeholder = painterResource(R.drawable.placeholder)
+                            ),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(RoundedCornerShape(8.dp)),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                }
+            }
+        } else {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(250.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = "No images available")
             }
         }
 
@@ -243,14 +361,13 @@ fun ImageSection(
             val fileName = path.substringAfterLast('/')
             Text("Selected Image: $fileName", style = MaterialTheme.typography.bodyMedium)
 
-
             Button(onClick = {
                 isUploading = true
                 selectedImagePath?.let { filePath ->
                     BackendWrapper.uploadListingImage(
                         listingId = listingId,
                         filePath = filePath,
-                        onSuccess = { response ->
+                        onSuccess = {
                             uploadMessage = "Image uploaded successfully!"
                             selectedImagePath = null
                             isUploading = false
@@ -275,10 +392,6 @@ fun ImageSection(
         }
     }
 }
-
-
-
-
 
 @Composable
 fun UnsavedChangesDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
