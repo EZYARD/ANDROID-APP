@@ -65,12 +65,12 @@ fun CreateListingScreen(navController: NavHostController) {
         ) {
             item {
                 ListingTextField(label = "Name", value = name, onValueChange = { name = it })
-                ListingTextField(label = "Description", value = description, onValueChange = { description = it })
                 ListingTextField(label = "City", value = city, onValueChange = { city = it })
                 ListingTextField(label = "State", value = state, onValueChange = { state = it })
                 ListingTextField(label = "Street", value = street, onValueChange = { street = it })
                 ListingTextField(label = "Street Number", value = streetNumber, onValueChange = { streetNumber = it })
                 ListingTextField(label = "Zip Code", value = zipcode, onValueChange = { zipcode = it }, keyboardType = KeyboardType.Number)
+                ListingTextField(label = "Description", value = description, onValueChange = { description = it })
                 ListingTextField(label = "Price Range", value = priceRange, onValueChange = { priceRange = it }, keyboardType = KeyboardType.Number)
 
                 TextButton(onClick = { showTagDialog = true }) {
