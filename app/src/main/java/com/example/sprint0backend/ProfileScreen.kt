@@ -1,5 +1,6 @@
 package com.example.sprint0backend
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -21,6 +22,7 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.sp
 import com.example.sprint0backend.BackendWrapper.Companion.testAuth
 import kotlinx.coroutines.tasks.await
@@ -28,21 +30,31 @@ import kotlinx.coroutines.tasks.await
 
 @Composable
 fun ProfileScreen(navController: NavHostController) {
-    // Get the current user from Firebase Auth directly
-    val user = Firebase.auth.currentUser
-    val coroutineScope = rememberCoroutineScope()
+    val sharedPreferences = LocalContext.current.getSharedPreferences("auth", Context.MODE_PRIVATE)
+    var userToken by remember { mutableStateOf<String?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var showDeleteConfirmation by remember { mutableStateOf(false) }
     var uid by remember { mutableStateOf<String?>(null) }
 
+    val user = Firebase.auth.currentUser
+    val coroutineScope = rememberCoroutineScope()  // Initialize coroutineScope
+
+    // Retrieve the token from SharedPreferences if user is not authenticated yet
     LaunchedEffect(user) {
         if (user != null) {
-            try {
-                userToken = user.getIdToken(true).await().token
-                uid = user.uid
+            // User is signed in
+            userToken = user.getIdToken(true).await().token
+            uid = user.uid
+            testAuth(userToken!!, onSuccess = { println(it) }, onError = { println(it) })
+        } else {
+            // If Firebase user is null, check SharedPreferences for token
+            userToken = sharedPreferences.getString("userToken", null)
+            if (userToken != null) {
+                // Use the token for authentication or navigation logic
                 testAuth(userToken!!, onSuccess = { println(it) }, onError = { println(it) })
-            } catch (e: Exception) {
-                errorMessage = e.localizedMessage
+            } else {
+                // If no token exists, handle the case where the user is not logged in
+                errorMessage = "No token found. Please log in again."
             }
         }
     }
@@ -70,10 +82,10 @@ fun ProfileScreen(navController: NavHostController) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            if (user != null) {
-                // User is signed in
+            if (user != null || userToken != null) {
+                // User is signed in or has a valid token
                 Text(
-                    text = "Welcome, ${user.email}!",
+                    text = "Welcome, ${user?.email ?: "User"}!",
                     style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
@@ -91,6 +103,7 @@ fun ProfileScreen(navController: NavHostController) {
                 // Sign Out Button
                 Button(onClick = {
                     Firebase.auth.signOut()  // Log the user out
+                    sharedPreferences.edit().remove("userToken").apply()  // Remove token from SharedPreferences
                     navController.navigate("LoginScreen")  // Navigate to Login screen
                 }) {
                     Text(text = "Sign Out")
@@ -147,6 +160,7 @@ fun ProfileScreen(navController: NavHostController) {
                         coroutineScope.launch {
                             try {
                                 Firebase.auth.currentUser!!.delete().await()
+                                sharedPreferences.edit().remove("userToken").apply()  // Remove token on account deletion
                                 navController.navigate("LoginScreen")
                             } catch (e: Exception) {
                                 errorMessage = e.localizedMessage
