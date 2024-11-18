@@ -57,7 +57,7 @@ fun EditListingScreen(
     val reviews by remember { mutableStateOf(listing.reviews ?: "") }
     var selectedTags by remember { mutableStateOf(listing.tags.split(", ").toSet()) }
     val dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
-    val displayDateFormatter = DateTimeFormatter.ofPattern("MMM dd, yyyy hh:mm a")
+    val displayDateFormatter = DateTimeFormatter.ofPattern("EEEE, MMM d h:mm a")
 
     var startDateTime by remember {
         mutableStateOf(

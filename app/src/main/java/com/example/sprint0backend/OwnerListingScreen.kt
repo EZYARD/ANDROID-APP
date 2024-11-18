@@ -206,7 +206,7 @@ fun OwnerListingScreen(listing: ListingComponent, navController: NavHostControll
 @Composable
 fun DisplayFormattedDate(startTime: String, endTime: String) {
     val inputFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
-    val outputFormatter = DateTimeFormatter.ofPattern("MMM dd, yyyy hh:mm a")
+    val outputFormatter = DateTimeFormatter.ofPattern("EEEE, MMM d h:mm a")
 
     val formattedStartTime = LocalDateTime.parse(startTime, inputFormatter).format(outputFormatter)
     val formattedEndTime = LocalDateTime.parse(endTime, inputFormatter).format(outputFormatter)
