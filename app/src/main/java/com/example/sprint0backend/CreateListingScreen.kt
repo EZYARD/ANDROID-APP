@@ -37,7 +37,7 @@ fun CreateListingScreen(navController: NavHostController) {
     var zipcode by remember { mutableStateOf("") }
     var priceRange by remember { mutableStateOf("") }
     var selectedTags by remember { mutableStateOf(setOf<String>()) }
-    val availableTags = listOf("Clothing", "Electrgonics", "Toys", "Books", "Miscellaneous")
+    val availableTags = listOf("Clothing", "Electronics", "Toys", "Books", "Miscellaneous")
     var showTagDialog by remember { mutableStateOf(false) }
     var startDateTime by remember { mutableStateOf<LocalDateTime?>(null) }
     var endDateTime by remember { mutableStateOf<LocalDateTime?>(null) }
@@ -73,7 +73,14 @@ fun CreateListingScreen(navController: NavHostController) {
                 ListingTextField(label = "Zip Code", value = zipcode, onValueChange = { zipcode = it }, keyboardType = KeyboardType.Number)
                 ListingTextField(label = "Price Range", value = priceRange, onValueChange = { priceRange = it }, keyboardType = KeyboardType.Number)
 
-                Spacer(modifier = Modifier.height(16.dp))
+                TextButton(onClick = { showTagDialog = true }) {
+                    Text("Add Tags")
+                }
+                Text(
+                    "Selected Tags: ${selectedTags.joinToString(", ")}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
 
                 // Enhanced Start Date/Time Picker
                 Button(
@@ -118,15 +125,6 @@ fun CreateListingScreen(navController: NavHostController) {
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-
-                TextButton(onClick = { showTagDialog = true }) {
-                    Text("Add Tags")
-                }
-                Text(
-                    "Selected Tags: ${selectedTags.joinToString(", ")}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(start = 8.dp)
-                )
 
                 Button(
                     onClick = {
