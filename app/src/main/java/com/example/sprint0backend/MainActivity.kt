@@ -77,18 +77,27 @@ fun MainApp() {
             }
         }
     }
+    navController.addOnDestinationChangedListener { _, destination, _ ->
+        currentRoute = destination.route ?: "ListingsScreen"
+    }
 
     Scaffold(
         bottomBar = {
-            if (currentRoute == "ListingsScreen" ||
-                currentRoute == "SearchScreen" ||
-                currentRoute == "MapScreen" ||
-                currentRoute == "ProfileScreen") {
+            // Only show the BottomNavigationBar when not on the SplashScreen
+            if (currentRoute != "SplashScreen" &&
+                (currentRoute == "ListingsScreen" ||
+                        currentRoute == "SearchScreen" ||
+                        currentRoute == "MapScreen" ||
+                        currentRoute == "ProfileScreen")
+            ) {
                 BottomNavigationBar(navController)
             }
         }
     ) { innerPadding ->
-        NavHost(navController = navController, startDestination = "ListingsScreen", modifier = Modifier.padding(innerPadding)) {
+        NavHost(navController = navController, startDestination = "SplashScreen", modifier = Modifier.padding(innerPadding)) {
+            composable("SplashScreen") {
+                SplashScreen(navController = navController)
+            }
             composable("ListingsScreen") {
                 ListingsScreen(navController = navController)
             }
