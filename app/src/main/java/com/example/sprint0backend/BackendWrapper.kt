@@ -272,14 +272,20 @@ class BackendWrapper {
             onSuccess: (List<Int>) -> Unit,
             onError: (String) -> Unit
         ) {
-            makeCall(
-                call = RetrofitInstance.api.getBookmarks("Bearer $idToken"),
-                transform = { body ->
-                    body ?: emptyList()
-                },
-                onSuccess = onSuccess,
-                onError = onError
-            )
+            val call = RetrofitInstance.api.getBookmarks("Bearer $idToken")
+            call.enqueue(object : Callback<BookmarkList> {
+                override fun onResponse(call: Call<BookmarkList>, response: Response<BookmarkList>) {
+                    if (response.isSuccessful) {
+                        response.body()?.let { onSuccess(it.bookmarked_listings) } ?: onError("Empty response from server")
+                    } else {
+                        onError("Failed to get bookmarked listings: ${response.errorBody()?.string()}")
+                    }
+                }
+
+                override fun onFailure(call: Call<BookmarkList>, t: Throwable) {
+                    onError("Network error: ${t.message}")
+                }
+            })
         }
     }
 }

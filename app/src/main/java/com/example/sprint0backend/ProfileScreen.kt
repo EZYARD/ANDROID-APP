@@ -5,34 +5,45 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.sprint0backend.BackendWrapper.Companion.getBookmarkedListings
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.sp
-import com.example.sprint0backend.BackendWrapper.Companion.testAuth
 import kotlinx.coroutines.tasks.await
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -45,7 +56,7 @@ fun ProfileScreen(navController: NavHostController) {
     var uid by remember { mutableStateOf<String?>(null) }
     var userListings by remember { mutableStateOf<List<ListingComponent>>(emptyList()) }
     var isLoadingListings by remember { mutableStateOf(true) }
-
+    val bookmarks = remember { mutableStateListOf<Int>() }
     val user = Firebase.auth.currentUser
     val coroutineScope = rememberCoroutineScope()
 
@@ -57,14 +68,28 @@ fun ProfileScreen(navController: NavHostController) {
 
             BackendWrapper.getListings(
                 onSuccess = { listings ->
+                    // Filter the listings to only include the ones owned by the user
                     userListings = listings.filter { it.uid == uid }
                     isLoadingListings = false
+
+                    getBookmarkedListings(userToken!!, onSuccess = { bookmarkedIds ->
+                        bookmarks.clear()
+                        bookmarks.addAll(bookmarkedIds)
+
+                        // Add all bookmarked listings that aren't already in userListings
+                        val bookmarkedListings = listings.filter { it.id in bookmarkedIds && it !in userListings }
+                        userListings = userListings + bookmarkedListings // Add them below user listings
+
+                    }, onError = {
+                        println("Error getting bookmarked listings")
+                    })
                 },
                 onError = { error ->
                     errorMessage = error
                     isLoadingListings = false
                 }
             )
+
         } else {
             userToken = sharedPreferences.getString("userToken", null)
             if (userToken == null) {
@@ -136,6 +161,7 @@ fun ProfileScreen(navController: NavHostController) {
                 isLoadingListings -> {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
+
                 userListings.isEmpty() -> {
                     Text(
                         text = "Your listings will be displayed here when created.",
@@ -144,6 +170,7 @@ fun ProfileScreen(navController: NavHostController) {
                         color = Color.Gray
                     )
                 }
+
                 else -> {
                     Column(
                         modifier = Modifier
@@ -151,7 +178,12 @@ fun ProfileScreen(navController: NavHostController) {
                             .padding(8.dp)
                     ) {
                         userListings.forEach { listing ->
-                            Listings(listing = listing, navController = navController, distance = null)
+                            Listings(
+                                listing = listing,
+                                navController = navController,
+                                distance = null,
+                                isAccountPage = true
+                            )
                         }
                     }
                 }

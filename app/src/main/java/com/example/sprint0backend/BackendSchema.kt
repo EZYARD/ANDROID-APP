@@ -62,6 +62,10 @@ data class RangeListingResponse(
     val distance_miles: Float
 )
 
+data class BookmarkList (
+    val bookmarked_listings: List<Int>
+)
+
 // Interface to define API endpoints for Retrofit
 interface BackendSchema {
 
@@ -116,7 +120,7 @@ interface BackendSchema {
     ): Call<ImageResponse>
 
     @GET("bookmarks")
-    fun getBookmarks(@Header("Authorization") authHeader: String): Call<List<Int>>
+    fun getBookmarks(@Header("Authorization") authHeader: String): Call<BookmarkList>
 
     @POST("bookmarks/create")
     fun createBookmark(
