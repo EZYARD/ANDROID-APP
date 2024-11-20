@@ -100,4 +100,13 @@ interface BackendSchema {
         @Query("location") location: String,
         @Query("radius") range: Float
     ): Call<List<RangeListingResponse>>
+
+    @GET("bookmarks")
+    fun getBookmarks(@Header("Authorization") authHeader: String): Call<List<Int>>
+
+    @POST("bookmarks/create")
+    fun createBookmark(
+        @Header("Authorization") authHeader: String,
+        @Body listingId: Int
+    ): Call<Void>
 }
