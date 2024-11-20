@@ -187,7 +187,7 @@ fun Listings(listing: ListingComponent, navController: NavHostController, distan
                 }
 
                 // Bookmark Button
-                Box(
+                if(userToken != null) Box(
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .padding(2.dp)
@@ -250,7 +250,7 @@ fun Listings(listing: ListingComponent, navController: NavHostController, distan
             Text(text = "City: ${listing.city}, ${listing.state}")
             Text(text = "Street: ${listing.streetNumber} ${listing.streetName}, ${listing.zipcode}")
             Text(text = "Price Range: ${listing.priceRange}")
-            Text("Bookmarked${bookmarks.toList().toString()}")
+//            Text("Bookmarked${bookmarks.toList().toString()}")
         }
     }
 }
