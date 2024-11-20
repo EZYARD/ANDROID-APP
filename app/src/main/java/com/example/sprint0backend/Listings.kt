@@ -22,6 +22,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
+import com.example.sprint0backend.BackendWrapper.Companion.bookmarkListing
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -159,6 +161,22 @@ fun Listings(listing: ListingComponent, navController: NavHostController, distan
             Text(text = "City: ${listing.city}, ${listing.state}")
             Text(text = "Street: ${listing.streetNumber} ${listing.streetName}, ${listing.zipcode}")
             Text(text = "Price Range: ${listing.priceRange}")
+            Button(onClick = {
+                val mUser = FirebaseAuth.getInstance().currentUser
+                mUser?.getIdToken(true)?.addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        userToken = task.result?.token
+                        bookmarkListing(userToken!!, listing.id, onSuccess = {
+                            println("Listing bookmarked")
+                        }, onError = {
+                            println("Error bookmarking listing")
+                        })
+                    }
+                }
+
+            }) {
+                Text("View Details")
+            }
             //Text(text = "Rating: ${listing.rating}")
             //Text(text = "Start Time: ${listing.startTime}")
             //Text(text = "End Time: ${listing.endTime}")

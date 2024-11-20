@@ -114,4 +114,13 @@ interface BackendSchema {
         @Part("listing_id") listingId: Int,
         @Part file: MultipartBody.Part
     ): Call<ImageResponse>
+
+    @GET("bookmarks")
+    fun getBookmarks(@Header("Authorization") authHeader: String): Call<List<Int>>
+
+    @POST("bookmarks/create")
+    fun createBookmark(
+        @Header("Authorization") authHeader: String,
+        @Body listingId: Int
+    ): Call<Void>
 }
