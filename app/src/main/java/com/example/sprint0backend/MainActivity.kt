@@ -2,13 +2,15 @@ package com.example.sprint0backend
 
 import MapScreen
 import OwnerListingScreen
+import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -20,8 +22,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -47,6 +51,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @RequiresApi(Build.VERSION_CODES.O)
 @Preview
 @Composable
@@ -93,8 +98,8 @@ fun MainApp() {
                 BottomNavigationBar(navController)
             }
         }
-    ) { innerPadding ->
-        NavHost(navController = navController, startDestination = "SplashScreen", modifier = Modifier.padding(innerPadding)) {
+    ) {
+        NavHost(navController = navController, startDestination = "SplashScreen"/*, modifier = Modifier.padding(innerPadding)*/) {
             composable("SplashScreen") {
                 SplashScreen(navController = navController)
             }
@@ -167,6 +172,7 @@ fun MainApp() {
     }
 }
 
+
 @Composable
 fun BottomNavigationBar(navController: NavHostController) {
     val currentDestination = navController.currentDestination
@@ -174,7 +180,10 @@ fun BottomNavigationBar(navController: NavHostController) {
     val user = auth.currentUser
 
     NavigationBar(
-        containerColor = Color.LightGray
+        containerColor = Color.LightGray,
+        modifier = Modifier
+            .height(96.dp)
+            .shadow(8.dp, RoundedCornerShape(0.dp))
     ) {
         NavigationBarItem(
             icon = { Icon(Icons.Default.Home, contentDescription = "Listings") },
