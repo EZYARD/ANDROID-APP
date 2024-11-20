@@ -266,5 +266,20 @@ class BackendWrapper {
                 }
             })
         }
+
+        fun getBookmarkedListings(
+            idToken: String,
+            onSuccess: (List<Int>) -> Unit,
+            onError: (String) -> Unit
+        ) {
+            makeCall(
+                call = RetrofitInstance.api.getBookmarks("Bearer $idToken"),
+                transform = { body ->
+                    body ?: emptyList()
+                },
+                onSuccess = onSuccess,
+                onError = onError
+            )
+        }
     }
 }

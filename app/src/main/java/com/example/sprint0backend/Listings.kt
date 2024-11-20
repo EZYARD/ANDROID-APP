@@ -30,6 +30,8 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URL
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 
 // Utility function to save image to local storage
 suspend fun saveImageToLocalStorage(
@@ -65,6 +67,7 @@ fun Listings(listing: ListingComponent, navController: NavHostController, distan
     val coroutineScope = rememberCoroutineScope()
     var imageFile by remember { mutableStateOf<File?>(null) }
     var imageUrl by remember { mutableStateOf<String?>(null) }
+    var bookmarks by remember { mutableStateOf<List<Int>>(listOf()) }
 
     // Get the context using LocalContext
     val context = LocalContext.current
@@ -146,6 +149,35 @@ fun Listings(listing: ListingComponent, navController: NavHostController, distan
                         .padding(horizontal = 12.dp, vertical = 6.dp)  // Smaller padding to shrink the box size
                 ) {
                     CountdownTimer(startTime = listing.startTime) // Add the countdown timer here
+                }
+
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopStart) // Position in the top-right corner
+                        .padding(2.dp)
+                ) {
+                    Button(onClick = {
+                        val mUser = FirebaseAuth.getInstance().currentUser
+                        mUser?.getIdToken(true)?.addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+                                userToken = task.result?.token
+                                bookmarkListing(userToken!!, listing.id, onSuccess = {
+                                    println("Listing bookmarked")
+                                }, onError = {
+                                    println("Error bookmarking listing")
+                                })
+                            }
+                        }
+
+                    }) {
+                        Image(
+                            painter = rememberAsyncImagePainter(model = R.drawable.bookmark),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .height(20.dp),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
                 }
             }
 
