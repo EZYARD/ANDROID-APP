@@ -42,7 +42,7 @@ fun CreateListingScreen(navController: NavHostController) {
     var startDateTime by remember { mutableStateOf<LocalDateTime?>(null) }
     var endDateTime by remember { mutableStateOf<LocalDateTime?>(null) }
 
-    val dateFormatter = DateTimeFormatter.ofPattern("EEEE, MMM d h:mm a")
+    val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
     val calendar = Calendar.getInstance()
 
     Scaffold(
