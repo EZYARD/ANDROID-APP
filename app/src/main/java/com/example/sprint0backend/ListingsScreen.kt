@@ -136,14 +136,13 @@ fun ListingsScreen(navController: NavHostController) {
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(16.dp)
+                        .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 128.dp) // Add bottom padding
                 ) {
                     items(filteredListings) { listing ->
                         Listings(listing = listing, navController = navController, distance = listByLocation.find { it.id == listing.id }?.distance_miles)
-
-
                     }
                 }
+
             }
         }
 

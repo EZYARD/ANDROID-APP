@@ -27,7 +27,6 @@ import androidx.compose.ui.unit.sp
 import com.example.sprint0backend.BackendWrapper.Companion.testAuth
 import kotlinx.coroutines.tasks.await
 
-
 @Composable
 fun ProfileScreen(navController: NavHostController) {
     val sharedPreferences = LocalContext.current.getSharedPreferences("auth", Context.MODE_PRIVATE)
@@ -37,146 +36,130 @@ fun ProfileScreen(navController: NavHostController) {
     var uid by remember { mutableStateOf<String?>(null) }
 
     val user = Firebase.auth.currentUser
-    val coroutineScope = rememberCoroutineScope()  // Initialize coroutineScope
+    val coroutineScope = rememberCoroutineScope()
 
     // Retrieve the token from SharedPreferences if user is not authenticated yet
     LaunchedEffect(user) {
         if (user != null) {
-            // User is signed in
             userToken = user.getIdToken(true).await().token
             uid = user.uid
             testAuth(userToken!!, onSuccess = { println(it) }, onError = { println(it) })
         } else {
-            // If Firebase user is null, check SharedPreferences for token
             userToken = sharedPreferences.getString("userToken", null)
             if (userToken != null) {
-                // Use the token for authentication or navigation logic
                 testAuth(userToken!!, onSuccess = { println(it) }, onError = { println(it) })
             } else {
-                // If no token exists, handle the case where the user is not logged in
                 errorMessage = "No token found. Please log in again."
             }
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Top, // Align elements to the top
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Top Section - Logo and Welcome Message
         Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.SpaceBetween,
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxWidth()
         ) {
-            // Back Arrow Button
-            IconButton(
-                onClick = { navController.navigate("ListingsScreen") },
-                modifier = Modifier.align(Alignment.Start).padding(bottom = 16.dp)
-            ) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-            }
-
-            // Welcome Image
             Image(
                 painter = painterResource(id = R.drawable.ezyard),
                 contentDescription = "Profile image",
-                modifier = Modifier.size(200.dp)
+                modifier = Modifier.size(150.dp)
             )
-
             Spacer(modifier = Modifier.height(16.dp))
-
             if (user != null || userToken != null) {
-                // User is signed in or has a valid token
                 Text(
                     text = "Welcome, ${user?.email ?: "User"}!",
                     style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 Text(
-                    text = "Here you will find the settings and components for the User Profile.",
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-                Text(
                     text = "User ID: $uid",
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(bottom = 16.dp)
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray,
+                    modifier = Modifier.padding(bottom = 8.dp)
                 )
-
-                // Sign Out Button
-                Button(onClick = {
-                    Firebase.auth.signOut()  // Log the user out
-                    sharedPreferences.edit().remove("userToken").apply()  // Remove token from SharedPreferences
-                    navController.navigate("LoginScreen")  // Navigate to Login screen
-                }) {
-                    Text(text = "Sign Out")
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Navigate to CreateListingScreen Button
-                Button(
-                    onClick = { navController.navigate("CreateListingScreen") },
-                    modifier = Modifier.padding(top = 16.dp)
-                ) {
-                    Text(text = "Create a Listing")
-                }
-
-                // Delete Account Button
-                Button(
-                    onClick = { showDeleteConfirmation = true }, // Show confirmation dialog
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-                    modifier = Modifier
-                        .padding(top = 16.dp)
-                        .size(150.dp, 48.dp) // Increased size for better visibility
-                ) {
-                    Text(text = "Delete Account", fontSize = 14.sp) // Larger font size for readability
-                }
-
-                // Display error message if any action fails
-                errorMessage?.let {
-                    Text(text = it, color = Color.Red)
-                }
             } else {
-                // User is not signed in
                 Text(
                     text = "You are not signed in.",
                     style = MaterialTheme.typography.headlineMedium,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
-                TextButton(onClick = {
-                    navController.navigate("LoginScreen")
-                }) {
-                    Text(text = "Login")
-                }
             }
         }
 
-        // Confirmation dialog for account deletion
-        if (showDeleteConfirmation) {
-            AlertDialog(
-                onDismissRequest = { showDeleteConfirmation = false },
-                title = { Text(text = "Confirm Deletion") },
-                text = { Text(text = "Are you sure you want to delete your account? This action cannot be undone.") },
-                confirmButton = {
-                    TextButton(onClick = {
-                        coroutineScope.launch {
-                            try {
-                                Firebase.auth.currentUser!!.delete().await()
-                                sharedPreferences.edit().remove("userToken").apply()  // Remove token on account deletion
-                                navController.navigate("LoginScreen")
-                            } catch (e: Exception) {
-                                errorMessage = e.localizedMessage
-                            }
-                        }
-                        showDeleteConfirmation = false // Close dialog after action
-                    }) {
-                        Text("Yes")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showDeleteConfirmation = false }) {
-                        Text("No")
-                    }
+        Spacer(modifier = Modifier.height(32.dp)) // Add a gap between sections
+
+        // Middle Section - Buttons
+        if (user != null || userToken != null) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Button(onClick = {
+                    Firebase.auth.signOut()
+                    sharedPreferences.edit().remove("userToken").apply()
+                    navController.navigate("LoginScreen")
+                }) {
+                    Text(text = "Sign Out")
                 }
-            )
+                Spacer(modifier = Modifier.height(12.dp))
+                Button(onClick = { navController.navigate("CreateListingScreen") }) {
+                    Text(text = "Create a Listing")
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+                Button(
+                    onClick = { showDeleteConfirmation = true },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                ) {
+                    Text(text = "Delete Account", color = Color.White)
+                }
+            }
+        } else {
+            Button(onClick = { navController.navigate("LoginScreen") }) {
+                Text(text = "Login")
+            }
         }
+
+        // Error Message Section
+        errorMessage?.let {
+            Text(text = it, color = Color.Red, modifier = Modifier.padding(top = 8.dp))
+        }
+    }
+
+
+    // Confirmation Dialog
+    if (showDeleteConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmation = false },
+            title = { Text(text = "Confirm Deletion") },
+            text = { Text(text = "Are you sure you want to delete your account? This action cannot be undone.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    coroutineScope.launch {
+                        try {
+                            Firebase.auth.currentUser!!.delete().await()
+                            sharedPreferences.edit().remove("userToken").apply()
+                            navController.navigate("LoginScreen")
+                        } catch (e: Exception) {
+                            errorMessage = e.localizedMessage
+                        }
+                    }
+                    showDeleteConfirmation = false
+                }) {
+                    Text("Yes")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirmation = false }) {
+                    Text("No")
+                }
+            }
+        )
     }
 }

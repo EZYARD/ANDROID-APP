@@ -78,7 +78,7 @@ fun LoginScreen(navController: NavHostController) {
             onClick = { navController.navigate("ListingsScreen") },
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .padding(16.dp)
+                .padding(start = 16.dp, top = 64.dp)
         ) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
         }
