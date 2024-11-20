@@ -244,5 +244,48 @@ class BackendWrapper {
             return filePath
         }
 
+
+        fun bookmarkListing(
+            idToken: String,
+            listingId: Int,
+            onSuccess: (Void) -> Unit,
+            onError: (String) -> Unit
+        ) {
+            val call = RetrofitInstance.api.createBookmark("Bearer $idToken", listingId)
+            call.enqueue(object : Callback<Void> {
+                override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                    if (response.isSuccessful) {
+                        response.body()?.let { onSuccess(it) } ?: onError("Empty response from server")
+                    } else {
+                        onError("Failed to create listing: ${response.errorBody()?.string()}")
+                    }
+                }
+
+                override fun onFailure(call: Call<Void>, t: Throwable) {
+                    onError("Network error: ${t.message}")
+                }
+            })
+        }
+
+        fun getBookmarkedListings(
+            idToken: String,
+            onSuccess: (List<Int>) -> Unit,
+            onError: (String) -> Unit
+        ) {
+            val call = RetrofitInstance.api.getBookmarks("Bearer $idToken")
+            call.enqueue(object : Callback<BookmarkList> {
+                override fun onResponse(call: Call<BookmarkList>, response: Response<BookmarkList>) {
+                    if (response.isSuccessful) {
+                        response.body()?.let { onSuccess(it.bookmarked_listings) } ?: onError("Empty response from server")
+                    } else {
+                        onError("Failed to get bookmarked listings: ${response.errorBody()?.string()}")
+                    }
+                }
+
+                override fun onFailure(call: Call<BookmarkList>, t: Throwable) {
+                    onError("Network error: ${t.message}")
+                }
+            })
+        }
     }
 }

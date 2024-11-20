@@ -80,11 +80,11 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
 
     // Image loading
-    implementation(libs.coil.compose.v132)
+    implementation(libs.coil.compose)
 
     // Firebase
-    implementation(platform(libs.firebase.bom.v3360))
-    implementation(libs.google.firebase.auth)
+    implementation(platform(libs.firebase.bom))
+//    implementation(libs.google.firebase)
 
     // Google Play Services and Credentials
     implementation(libs.androidx.credentials)
