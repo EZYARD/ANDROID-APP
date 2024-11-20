@@ -1,8 +1,15 @@
 package com.example.sprint0backend
 
 import android.content.Context
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.*
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
@@ -23,10 +30,12 @@ import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import com.example.sprint0backend.BackendWrapper.Companion.testAuth
 import kotlinx.coroutines.tasks.await
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ProfileScreen(navController: NavHostController) {
     val sharedPreferences = LocalContext.current.getSharedPreferences("auth", Context.MODE_PRIVATE)
@@ -34,104 +43,155 @@ fun ProfileScreen(navController: NavHostController) {
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var showDeleteConfirmation by remember { mutableStateOf(false) }
     var uid by remember { mutableStateOf<String?>(null) }
+    var userListings by remember { mutableStateOf<List<ListingComponent>>(emptyList()) }
+    var isLoadingListings by remember { mutableStateOf(true) }
 
     val user = Firebase.auth.currentUser
     val coroutineScope = rememberCoroutineScope()
 
-    // Retrieve the token from SharedPreferences if user is not authenticated yet
+    // Fetch user info and their listings
     LaunchedEffect(user) {
         if (user != null) {
             userToken = user.getIdToken(true).await().token
             uid = user.uid
-            testAuth(userToken!!, onSuccess = { println(it) }, onError = { println(it) })
+
+            BackendWrapper.getListings(
+                onSuccess = { listings ->
+                    userListings = listings.filter { it.uid == uid }
+                    isLoadingListings = false
+                },
+                onError = { error ->
+                    errorMessage = error
+                    isLoadingListings = false
+                }
+            )
         } else {
             userToken = sharedPreferences.getString("userToken", null)
-            if (userToken != null) {
-                testAuth(userToken!!, onSuccess = { println(it) }, onError = { println(it) })
-            } else {
+            if (userToken == null) {
                 errorMessage = "No token found. Please log in again."
             }
         }
     }
 
+    // Make the entire screen scrollable
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Top, // Align elements to the top
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp)
+            .padding(bottom = 128.dp), // Add padding for navigation bar
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Top Section - Logo and Welcome Message
+        Spacer(modifier = Modifier.height(80.dp)) // Lower the logo and welcome section
+
+        // Top Section with centered content
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.wrapContentHeight()
         ) {
             Image(
                 painter = painterResource(id = R.drawable.ezyard),
                 contentDescription = "Profile image",
-                modifier = Modifier.size(150.dp)
+                modifier = Modifier
+                    .size(150.dp)
+                    .padding(bottom = 16.dp)
             )
-            Spacer(modifier = Modifier.height(16.dp))
             if (user != null || userToken != null) {
                 Text(
                     text = "Welcome, ${user?.email ?: "User"}!",
                     style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    modifier = Modifier.padding(bottom = 8.dp),
+                    textAlign = TextAlign.Center
                 )
                 Text(
-                    text = "User ID: $uid",
+                    text = "User ID: ${uid ?: "N/A"}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.Gray,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    modifier = Modifier.padding(bottom = 16.dp),
+                    textAlign = TextAlign.Center
                 )
             } else {
                 Text(
                     text = "You are not signed in.",
                     style = MaterialTheme.typography.headlineMedium,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    modifier = Modifier.padding(bottom = 16.dp),
+                    textAlign = TextAlign.Center
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(32.dp)) // Add a gap between sections
+        // Listings Section
+        Text(
+            text = "Your Listings",
+            style = MaterialTheme.typography.headlineSmall,
+            modifier = Modifier.padding(vertical = 16.dp)
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.LightGray, shape = RoundedCornerShape(8.dp))
+                .padding(8.dp)
+        ) {
+            when {
+                isLoadingListings -> {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                }
+                userListings.isEmpty() -> {
+                    Text(
+                        text = "Your listings will be displayed here when created.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.align(Alignment.Center),
+                        color = Color.Gray
+                    )
+                }
+                else -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp)
+                    ) {
+                        userListings.forEach { listing ->
+                            Listings(listing = listing, navController = navController, distance = null)
+                        }
+                    }
+                }
+            }
+        }
 
-        // Middle Section - Buttons
-        if (user != null || userToken != null) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Button(onClick = {
+        Spacer(modifier = Modifier.height(16.dp)) // Space between listings and buttons
+
+        // Bottom Section - Buttons
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Button(
+                onClick = {
                     Firebase.auth.signOut()
                     sharedPreferences.edit().remove("userToken").apply()
                     navController.navigate("LoginScreen")
-                }) {
-                    Text(text = "Sign Out")
-                }
-                Spacer(modifier = Modifier.height(12.dp))
-                Button(onClick = { navController.navigate("CreateListingScreen") }) {
-                    Text(text = "Create a Listing")
-                }
-                Spacer(modifier = Modifier.height(12.dp))
-                Button(
-                    onClick = { showDeleteConfirmation = true },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
-                ) {
-                    Text(text = "Delete Account", color = Color.White)
-                }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(text = "Sign Out")
             }
-        } else {
-            Button(onClick = { navController.navigate("LoginScreen") }) {
-                Text(text = "Login")
+            Spacer(modifier = Modifier.height(12.dp))
+            Button(
+                onClick = { navController.navigate("CreateListingScreen") },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(text = "Create a Listing")
             }
-        }
-
-        // Error Message Section
-        errorMessage?.let {
-            Text(text = it, color = Color.Red, modifier = Modifier.padding(top = 8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+            Button(
+                onClick = { showDeleteConfirmation = true },
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(text = "Delete Account", color = Color.White)
+            }
         }
     }
-
 
     // Confirmation Dialog
     if (showDeleteConfirmation) {
@@ -163,3 +223,6 @@ fun ProfileScreen(navController: NavHostController) {
         )
     }
 }
+
+
+

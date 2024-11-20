@@ -45,7 +45,11 @@ fun MapScreen() {
         modifier = androidx.compose.ui.Modifier
             .fillMaxWidth()
             .background(Color.White)
-            .padding(20.dp)
+            .padding(
+                top = 64.dp,
+                bottom = 128.dp,
+                start = 16.dp, // Left-Right
+                end = 16.dp)
     ) {
         YardSaleMap(
             userLocation = userLocation,
