@@ -1,4 +1,3 @@
 <resources>
-    <string name="app_name">Sprint0Backend</string>
-    <string name="title_activity_maps">MapsActivity</string>
+    <string name="app_name">ezyard frontend</string>
 </resources>
