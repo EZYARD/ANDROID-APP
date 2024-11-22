@@ -1,6 +1,8 @@
 package com.example.ezyardfrontend
 
+import GoogleLogin
 import android.content.Context
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -51,6 +53,7 @@ fun LoginScreen(navController: NavHostController) {
     var errorMessage by remember { mutableStateOf<String?>(null) }
     val coroutineScope = rememberCoroutineScope()
     val sharedPreferences = LocalContext.current.getSharedPreferences("auth", Context.MODE_PRIVATE)
+    val context = LocalContext.current
 
     // Function to save token to SharedPreferences
     fun saveToken(token: String?) {
@@ -64,11 +67,17 @@ fun LoginScreen(navController: NavHostController) {
 
     // Retrieve the token if available and navigate accordingly
     LaunchedEffect(Unit) {
-        val token = getToken()
-        if (token != null) {
-            // If token is found, navigate to ProfileScreen directly
+        Log.d("LOGIN", "GETTING TOKEN")
+        Firebase.auth.currentUser?.getIdToken(true)?.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                Log.d("LOGIN", "TOKEN FOUND TOKEN")
+                userToken = task.result?.token
+                // Use token for authentication or other purposes
+                saveToken(userToken) // Save token to SharedPreferences
+            }
             navController.navigate("ProfileScreen")
         }
+
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -137,7 +146,10 @@ fun LoginScreen(navController: NavHostController) {
                                     val userToken = task.result?.token
                                     saveToken(userToken) // Save token to SharedPreferences
                                     // Use token for authentication or other purposes
-                                    testAuth(userToken!!, onSuccess = { println(it) }, onError = { println(it) })
+                                    testAuth(
+                                        userToken!!,
+                                        onSuccess = { println(it) },
+                                        onError = { println(it) })
                                     // Navigate to ProfileScreen
                                     navController.navigate("ProfileScreen")
                                 } else {
@@ -167,22 +179,7 @@ fun LoginScreen(navController: NavHostController) {
 
 // Spacer(modifier = Modifier.height(4.dp))
 
-// Image(
-//     painter = painterResource(id = R.drawable.google),
-//     contentDescription = "Google",
-//     modifier = Modifier
-//         .size(60.dp)
-//         .clickable {
-//             // Google login logic goes here
-//         }
-// )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            // Add a TextButton to navigate to CreateAccount
-            TextButton(onClick = { navController.navigate("CreateAccount") }) {
-                Text(text = "Don't have an account? Create one")
-            }
+            GoogleLogin()
         }
     }
 }
