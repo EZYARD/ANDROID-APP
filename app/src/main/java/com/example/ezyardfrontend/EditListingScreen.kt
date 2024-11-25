@@ -28,6 +28,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
@@ -67,7 +69,6 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
 
-@RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter", "UnrememberedMutableState")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -104,14 +105,17 @@ fun EditListingScreen(
     val calendar = Calendar.getInstance()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    var newImages by remember { mutableStateOf<List<String>>(emptyList()) }
 
     val hasChanges by derivedStateOf {
+        newImages.isNotEmpty() ||
         listOf(name, description, city, state, zipcode, priceRange, selectedTags.joinToString(", "),
             startDateTime?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), endDateTime?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
         ) != listOf(listing.name, listing.description, listing.city, listing.state, listing.zipcode.toString(),
             listing.priceRange ?: "", listing.tags, listing.startTime, listing.endTime
         )
     }
+
 
     Scaffold(
         topBar = {
@@ -126,30 +130,53 @@ fun EditListingScreen(
                 },
                 actions = {
                     TextButton(onClick = {
-                        val tagsString = selectedTags.joinToString(", ")
-                        BackendWrapper.updateListing(
-                            listingId = listing.id,
-                            name = name.takeIf { it.isNotBlank() },
-                            streetNumber = listing.streetNumber.takeIf { it != 0 },
-                            streetName = listing.streetName.takeIf { it.isNotBlank() },
-                            city = city.takeIf { it.isNotBlank() },
-                            state = state.takeIf { it.isNotBlank() },
-                            zipcode = zipcode.toIntOrNull(),
-                            description = description.takeIf { it.isNotBlank() },
-                            tags = tagsString.takeIf { it.isNotBlank() },
-                            priceRange = priceRange.takeIf { it.isNotBlank() },
-                            rating = rating.takeIf { it.isNotBlank() },
-                            reviews = reviews.takeIf { it.isNotBlank() },
-                            startTime = startDateTime?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
-                            endTime = endDateTime?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
-                            onSuccess = {
-                                scope.launch {
-                                    snackbarHostState.showSnackbar("Listing saved successfully")
-                                    navController.popBackStack()
+                        scope.launch {
+                            newImages.forEach { imagePath ->
+                                BackendWrapper.uploadListingImage(
+                                    listingId = listing.id,
+                                    filePath = imagePath,
+                                    onSuccess = { /* nothing */ },
+                                    onError = {
+                                        scope.launch {
+                                            snackbarHostState.showSnackbar("Failed to upload image: $imagePath")
+                                        }
+
+                                    }
+                                )
+                            }
+
+                            // Update listing details
+                            val tagsString = selectedTags.joinToString(", ")
+                            BackendWrapper.updateListing(
+                                listingId = listing.id,
+                                name = name.takeIf { it.isNotBlank() },
+                                streetNumber = listing.streetNumber.takeIf { it != 0 },
+                                streetName = listing.streetName.takeIf { it.isNotBlank() },
+                                city = city.takeIf { it.isNotBlank() },
+                                state = state.takeIf { it.isNotBlank() },
+                                zipcode = zipcode.toIntOrNull(),
+                                description = description.takeIf { it.isNotBlank() },
+                                tags = tagsString.takeIf { it.isNotBlank() },
+                                priceRange = priceRange.takeIf { it.isNotBlank() },
+                                rating = rating.takeIf { it.isNotBlank() },
+                                reviews = reviews.takeIf { it.isNotBlank() },
+                                startTime = startDateTime?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+                                endTime = endDateTime?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+                                onSuccess = {
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar("Listing saved successfully")
+                                        navController.popBackStack()
+                                    }
+
+                                },
+                                onError = {
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar("Failed to save listing")
+
+                                    }
                                 }
-                            },
-                            onError = { showPrompt = true }
-                        )
+                            )
+                        }
                     }) {
                         Text("Save", style = MaterialTheme.typography.labelLarge)
                     }
@@ -168,15 +195,17 @@ fun EditListingScreen(
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
         ) {
-            // Display images at the top
             ImageSection(
                 listingId = listing.id,
-                navController = navController
+                navController = navController,
+                newImages = newImages,
+                onAddImage = { newPaths -> newImages = newImages + newPaths },
+                onRemoveImage = { imagePath -> newImages = newImages - imagePath },
+                onRemoveExistingImage = { /* No-op for now */ } // placeholder in case we add remove images
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Display the text fields below images
             ListingTextField(label = "Name", value = name, onValueChange = { name = it })
             ListingTextField(label = "Description", value = description, onValueChange = { description = it })
             ListingTextField(label = "City", value = city, onValueChange = { city = it })
@@ -293,14 +322,17 @@ fun ListingTextField(
 @Composable
 fun ImageSection(
     listingId: Int,
-    navController: NavHostController
+    navController: NavHostController,
+    newImages: List<String>,
+    onAddImage: (List<String>) -> Unit,
+    onRemoveImage: (String) -> Unit,
+    onRemoveExistingImage: (String) -> Unit = {} // I'm keeping this here in case we want to remove existing images
 ) {
     val context = LocalContext.current
-    var selectedImagePath by remember { mutableStateOf<String?>(null) }
-    var uploadMessage by remember { mutableStateOf<String?>(null) }
     var listingImages by remember { mutableStateOf<List<String>>(emptyList()) }
-    var isUploading by remember { mutableStateOf(false) }
+    var uploadMessage by remember { mutableStateOf<String?>(null) }
 
+    // Fetch existing images
     LaunchedEffect(listingId) {
         BackendWrapper.getImageUrlsForListing(
             listingId = listingId,
@@ -313,13 +345,12 @@ fun ImageSection(
         )
     }
 
+
     val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri ->
-        uri?.let {
-            selectedImagePath = getFilePathFromUri(context, uri)
-            uploadMessage = null
-        }
+        contract = ActivityResultContracts.GetMultipleContents()
+    ) { uris ->
+        val newPaths = uris.mapNotNull { uri -> getFilePathFromUri(context, uri) }
+        onAddImage(newPaths) // Add selected new images to the list
     }
 
     Column(
@@ -340,7 +371,7 @@ fun ImageSection(
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
-        if (listingImages.isNotEmpty()) {
+        if (listingImages.isNotEmpty() || newImages.isNotEmpty()) {
             LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -352,20 +383,58 @@ fun ImageSection(
                             .padding(4.dp)
                             .fillMaxHeight()
                             .width(300.dp),
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.TopEnd
                     ) {
                         Image(
-                            painter = rememberAsyncImagePainter(
-                                model = imageUrl,
-                                error = painterResource(R.drawable.placeholder),
-                                placeholder = painterResource(R.drawable.placeholder)
-                            ),
+                            painter = rememberAsyncImagePainter(imageUrl),
                             contentDescription = null,
                             modifier = Modifier
                                 .fillMaxSize()
                                 .clip(RoundedCornerShape(8.dp)),
                             contentScale = ContentScale.Crop
                         )
+                        IconButton(
+                            onClick = { onRemoveExistingImage(imageUrl) }, // Placeholder
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .background(Color.White.copy(alpha = 0.7f), RoundedCornerShape(50))
+                                .padding(2.dp)
+                        ) {
+                            Icon(       // 'X' on the corner of image
+                                Icons.Default.Close,
+                                contentDescription = "Remove Existing Image",
+                                tint = Color.Gray
+                            )
+                        }
+                    }
+                }
+
+                //   Spot for new images   //
+                items(newImages) { imagePath ->
+                    Box(
+                        modifier = Modifier
+                            .padding(4.dp)
+                            .fillMaxHeight()
+                            .width(300.dp),
+                        contentAlignment = Alignment.TopEnd
+                    ) {
+                        Image(
+                            painter = rememberAsyncImagePainter(imagePath),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(RoundedCornerShape(8.dp)),
+                            contentScale = ContentScale.Crop
+                        )
+                        IconButton(
+                            onClick = { onRemoveImage(imagePath) },
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .background(Color.White.copy(alpha = 0.7f), RoundedCornerShape(50))
+                                .padding(2.dp)
+                        ) {
+                            Icon(Icons.Default.Close, contentDescription = "Remove New Image")
+                        }
                     }
                 }
             }
@@ -380,47 +449,24 @@ fun ImageSection(
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        TextButton(onClick = { launcher.launch("image/*") }) {
-            Text("Choose Image from Gallery")
+        Button(onClick = { launcher.launch("image/*") }) {
+            Text("Add Images")
         }
 
-        selectedImagePath?.let { path ->
-            val fileName = path.substringAfterLast('/')
-            Text("Selected Image: $fileName", style = MaterialTheme.typography.bodyMedium)
-
-            Button(onClick = {
-                isUploading = true
-                selectedImagePath?.let { filePath ->
-                    BackendWrapper.uploadListingImage(
-                        listingId = listingId,
-                        filePath = filePath,
-                        onSuccess = {
-                            uploadMessage = "Image uploaded successfully!"
-                            selectedImagePath = null
-                            isUploading = false
-
-                            navController.navigate("EditListingScreen/$listingId") {
-                                popUpTo("EditListingScreen/$listingId") { inclusive = true }
-                            }
-                        },
-                        onError = { error ->
-                            uploadMessage = "Failed to upload image: $error"
-                            isUploading = false
-                        }
-                    )
-                }
-            }) {
-                Text("Upload Image")
-            }
-        }
 
         uploadMessage?.let { message ->
-            Text(message, color = Color.Green, style = MaterialTheme.typography.bodyMedium)
+            Text(
+                text = message,
+                color = Color.Red,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(top = 8.dp)
+            )
         }
     }
 }
+
 
 @Composable
 fun UnsavedChangesDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
