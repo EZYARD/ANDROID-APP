@@ -1,9 +1,8 @@
 package com.example.ezyardfrontend
 
-import GoogleLogin
 import android.content.Context
-import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,24 +24,24 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import com.example.ezyardfrontend.BackendWrapper.Companion.testAuth
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import com.example.ezyardfrontend.BackendWrapper.Companion.testAuth
+import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.launch
 
 var userToken by mutableStateOf<String?>(null)
 
@@ -53,7 +52,6 @@ fun LoginScreen(navController: NavHostController) {
     var errorMessage by remember { mutableStateOf<String?>(null) }
     val coroutineScope = rememberCoroutineScope()
     val sharedPreferences = LocalContext.current.getSharedPreferences("auth", Context.MODE_PRIVATE)
-    val context = LocalContext.current
 
     // Function to save token to SharedPreferences
     fun saveToken(token: String?) {
@@ -67,17 +65,11 @@ fun LoginScreen(navController: NavHostController) {
 
     // Retrieve the token if available and navigate accordingly
     LaunchedEffect(Unit) {
-        Log.d("LOGIN", "GETTING TOKEN")
-        Firebase.auth.currentUser?.getIdToken(true)?.addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                Log.d("LOGIN", "TOKEN FOUND TOKEN")
-                userToken = task.result?.token
-                // Use token for authentication or other purposes
-                saveToken(userToken) // Save token to SharedPreferences
-            }
+        val token = getToken()
+        if (token != null) {
+            // If token is found, navigate to ProfileScreen directly
             navController.navigate("ProfileScreen")
         }
-
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -86,7 +78,7 @@ fun LoginScreen(navController: NavHostController) {
             onClick = { navController.navigate("ListingsScreen") },
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .padding(start = 16.dp, top = 64.dp)
+                .padding(16.dp)
         ) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
         }
@@ -146,10 +138,7 @@ fun LoginScreen(navController: NavHostController) {
                                     val userToken = task.result?.token
                                     saveToken(userToken) // Save token to SharedPreferences
                                     // Use token for authentication or other purposes
-                                    testAuth(
-                                        userToken!!,
-                                        onSuccess = { println(it) },
-                                        onError = { println(it) })
+                                    testAuth(userToken!!, onSuccess = { println(it) }, onError = { println(it) })
                                     // Navigate to ProfileScreen
                                     navController.navigate("ProfileScreen")
                                 } else {
@@ -179,7 +168,22 @@ fun LoginScreen(navController: NavHostController) {
 
 // Spacer(modifier = Modifier.height(4.dp))
 
-            GoogleLogin()
+// Image(
+//     painter = painterResource(id = R.drawable.google),
+//     contentDescription = "Google",
+//     modifier = Modifier
+//         .size(60.dp)
+//         .clickable {
+//             // Google login logic goes here
+//         }
+// )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // Add a TextButton to navigate to CreateAccount
+            TextButton(onClick = { navController.navigate("CreateAccount") }) {
+                Text(text = "Don't have an account? Create one")
+            }
         }
     }
 }
