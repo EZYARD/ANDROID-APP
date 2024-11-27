@@ -3,6 +3,7 @@ package com.example.ezyardfrontend
 import okhttp3.MultipartBody
 import retrofit2.Call
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Multipart
@@ -127,4 +128,12 @@ interface BackendSchema {
         @Header("Authorization") authHeader: String,
         @Body listingId: Int
     ): Call<Void>
+
+    @DELETE("images/{listing_id}/{image_id}")
+    fun deleteImage(
+        @Path("listing_id") listingId: Int,
+        @Path("image_id") imageId: Int
+    ): Call<Void>
+
+
 }
