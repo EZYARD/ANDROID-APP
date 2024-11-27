@@ -69,6 +69,8 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
 
+private var imageCount: Int = 0
+
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter", "UnrememberedMutableState")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -107,8 +109,18 @@ fun EditListingScreen(
     val scope = rememberCoroutineScope()
     var newImages by remember { mutableStateOf<List<String>>(emptyList()) }
 
+    val imagesToDelete = remember { mutableStateOf<List<String>>(emptyList()) }
+
+    val scheduleImageForDeletion: (String) -> Unit = { imageUrl ->
+        imagesToDelete.value += imageUrl
+    }
+
+
+
+
     val hasChanges by derivedStateOf {
         newImages.isNotEmpty() ||
+        imagesToDelete.value.isNotEmpty() ||
         listOf(name, description, city, state, zipcode, priceRange, selectedTags.joinToString(", "),
             startDateTime?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), endDateTime?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
         ) != listOf(listing.name, listing.description, listing.city, listing.state, listing.zipcode.toString(),
@@ -130,7 +142,24 @@ fun EditListingScreen(
                 },
                 actions = {
                     TextButton(onClick = {
+                        if (imageCount <= 0) {
+                            scope.launch {
+                                snackbarHostState.showSnackbar("You must have at least one image in your listing.")
+                            }
+                            return@TextButton // Prevent saving
+                        }
+
                         scope.launch {
+                            imagesToDelete.value.forEach { imageUrl ->
+                                val imageId = imageUrl.substringAfterLast("/").toIntOrNull() ?: return@forEach
+                                BackendWrapper.deleteImage(
+                                    listingId = listing.id,
+                                    imageId = imageId,
+                                    onSuccess = { },
+                                    onError = {  }
+                                )
+                            }
+
                             newImages.forEach { imagePath ->
                                 BackendWrapper.uploadListingImage(
                                     listingId = listing.id,
@@ -201,7 +230,7 @@ fun EditListingScreen(
                 newImages = newImages,
                 onAddImage = { newPaths -> newImages = newImages + newPaths },
                 onRemoveImage = { imagePath -> newImages = newImages - imagePath },
-                onRemoveExistingImage = { /* No-op for now */ } // placeholder in case we add remove images
+                onScheduleDeleteImage = scheduleImageForDeletion
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -326,7 +355,7 @@ fun ImageSection(
     newImages: List<String>,
     onAddImage: (List<String>) -> Unit,
     onRemoveImage: (String) -> Unit,
-    onRemoveExistingImage: (String) -> Unit = {} // I'm keeping this here in case we want to remove existing images
+    onScheduleDeleteImage: (String) -> Unit
 ) {
     val context = LocalContext.current
     var listingImages by remember { mutableStateOf<List<String>>(emptyList()) }
@@ -337,7 +366,8 @@ fun ImageSection(
         BackendWrapper.getImageUrlsForListing(
             listingId = listingId,
             onSuccess = { images ->
-                listingImages = images
+                listingImages = images ?: emptyList()
+                imageCount = listingImages.size // Initialize with the number of backend images
             },
             onError = { error ->
                 uploadMessage = "Failed to load images: $error"
@@ -345,22 +375,18 @@ fun ImageSection(
         )
     }
 
-
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetMultipleContents()
     ) { uris ->
         val newPaths = uris.mapNotNull { uri -> getFilePathFromUri(context, uri) }
-        onAddImage(newPaths) // Add selected new images to the list
+        onAddImage(newPaths)
+        imageCount += newPaths.size
     }
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .border(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.inverseSurface,
-                shape = RoundedCornerShape(8.dp)
-            )
+            .border(1.dp, MaterialTheme.colorScheme.inverseSurface, RoundedCornerShape(8.dp))
             .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(16.dp))
             .padding(8.dp)
     ) {
@@ -373,61 +399,52 @@ fun ImageSection(
 
         if (listingImages.isNotEmpty() || newImages.isNotEmpty()) {
             LazyRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(250.dp)
+                modifier = Modifier.fillMaxWidth().height(250.dp)
             ) {
                 items(listingImages) { imageUrl ->
                     Box(
-                        modifier = Modifier
-                            .padding(4.dp)
-                            .fillMaxHeight()
-                            .width(300.dp),
+                        modifier = Modifier.padding(4.dp).fillMaxHeight().width(300.dp),
                         contentAlignment = Alignment.TopEnd
                     ) {
                         Image(
                             painter = rememberAsyncImagePainter(imageUrl),
                             contentDescription = null,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .clip(RoundedCornerShape(8.dp)),
+                            modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(8.dp)),
                             contentScale = ContentScale.Crop
                         )
                         IconButton(
-                            onClick = { onRemoveExistingImage(imageUrl) }, // Placeholder
+                            onClick = {
+                                onScheduleDeleteImage(imageUrl) // Schedule for deletion
+                                listingImages = listingImages - imageUrl // Updates the UI visually (won't actually delete images)
+                                imageCount -= 1
+                              },
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
                                 .background(Color.White.copy(alpha = 0.7f), RoundedCornerShape(50))
                                 .padding(2.dp)
                         ) {
-                            Icon(       // 'X' on the corner of image
-                                Icons.Default.Close,
-                                contentDescription = "Remove Existing Image",
-                                tint = Color.Gray
-                            )
+                            Icon(Icons.Default.Close, contentDescription = "Remove Existing Image")
                         }
                     }
                 }
 
-                //   Spot for new images   //
+                // Display new images (added by user)
                 items(newImages) { imagePath ->
                     Box(
-                        modifier = Modifier
-                            .padding(4.dp)
-                            .fillMaxHeight()
-                            .width(300.dp),
+                        modifier = Modifier.padding(4.dp).fillMaxHeight().width(300.dp),
                         contentAlignment = Alignment.TopEnd
                     ) {
                         Image(
                             painter = rememberAsyncImagePainter(imagePath),
                             contentDescription = null,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .clip(RoundedCornerShape(8.dp)),
+                            modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(8.dp)),
                             contentScale = ContentScale.Crop
                         )
                         IconButton(
-                            onClick = { onRemoveImage(imagePath) },
+                            onClick = {
+                                onRemoveImage(imagePath)
+                                imageCount -= 1
+                              },
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
                                 .background(Color.White.copy(alpha = 0.7f), RoundedCornerShape(50))
@@ -440,9 +457,7 @@ fun ImageSection(
             }
         } else {
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(250.dp),
+                modifier = Modifier.fillMaxWidth().height(250.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(text = "No images available")
@@ -455,7 +470,6 @@ fun ImageSection(
             Text("Add Images")
         }
 
-
         uploadMessage?.let { message ->
             Text(
                 text = message,
@@ -466,7 +480,6 @@ fun ImageSection(
         }
     }
 }
-
 
 @Composable
 fun UnsavedChangesDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {

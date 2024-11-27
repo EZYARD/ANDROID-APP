@@ -244,6 +244,26 @@ class BackendWrapper {
             return filePath
         }
 
+        fun deleteImage(
+            listingId: Int,
+            imageId: Int,
+            onSuccess: () -> Unit,
+            onError: (String) -> Unit
+        ) {
+            RetrofitInstance.api.deleteImage(listingId, imageId).enqueue(object : Callback<Void> {
+                override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                    if (response.isSuccessful) {
+                        onSuccess()
+                    } else {
+                        onError("Failed to delete image: ${response.errorBody()?.string()}")
+                    }
+                }
+                override fun onFailure(call: Call<Void>, t: Throwable) {
+                    onError("Network error: ${t.message}")
+                }
+            })
+        }
+
 
         fun bookmarkListing(
             idToken: String,
