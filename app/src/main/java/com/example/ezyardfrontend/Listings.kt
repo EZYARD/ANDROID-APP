@@ -274,7 +274,7 @@ fun Listings(
         Text(text = "  City: ${listing.city}, ${listing.state}")
         Text(text = "  Street: ${listing.streetNumber} ${listing.streetName}, ${listing.zipcode}")
         Text(text = "  Price Range: ${listing.priceRange}")
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(6.dp))
     }
 
 
