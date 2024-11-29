@@ -261,7 +261,7 @@ fun Listings(
                 }
             }
         }
-        Spacer(modifier = Modifier.height(8.dp))
+        //Spacer(modifier = Modifier.height(8.dp))
 
         // Display listing details as text below the image
         Text(text = "  Name: ${listing.name}", style = MaterialTheme.typography.bodyMedium)
