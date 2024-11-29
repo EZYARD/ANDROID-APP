@@ -59,7 +59,7 @@ fun CreateListingScreen(navController: NavHostController) {
     var endDateTime by remember { mutableStateOf<LocalDateTime?>(null) }
 
     val dateFormatter = DateTimeFormatter.ofPattern("EEEE, MMM d h:mm a")
-    val calendar = Calendar.getInstance()g
+    val calendar = Calendar.getInstance()
 
     Scaffold(
         topBar = {
