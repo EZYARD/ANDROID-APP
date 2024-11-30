@@ -41,6 +41,8 @@ import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
+
+
 @Composable
 fun ProfileScreen(navController: NavHostController) {
     val sharedPreferences = LocalContext.current.getSharedPreferences("auth", Context.MODE_PRIVATE)
@@ -91,22 +93,6 @@ fun ProfileScreen(navController: NavHostController) {
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        // Sign Out button at the top-right corner
-        Button(
-            onClick = {
-                Firebase.auth.signOut()
-                sharedPreferences.edit().remove("userToken").apply()
-                navController.navigate("LoginScreen")
-            },
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(16.dp)
-        ) {
-            Text(text = "Sign Out")
-        }
-    }
-
     // Make the entire screen scrollable
     Column(
         modifier = Modifier
@@ -154,7 +140,7 @@ fun ProfileScreen(navController: NavHostController) {
                 )
             }
         }
-        Spacer(modifier = Modifier.height(125.dp))
+        Spacer(modifier = Modifier.height(75.dp))
 
         // Bottom Section - Buttons
         Column(
@@ -179,6 +165,17 @@ fun ProfileScreen(navController: NavHostController) {
             ) {
                 Text(text = "Create a Listing")
             }
+            Button(
+                onClick = {
+                    Firebase.auth.signOut()
+                    sharedPreferences.edit().remove("userToken").apply()
+                    navController.navigate("LoginScreen")
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(text = "Sign Out")
+            }
+
             Spacer(modifier = Modifier.height(12.dp))
             Button(
                 onClick = { showDeleteConfirmation = true },
