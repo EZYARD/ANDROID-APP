@@ -1,10 +1,7 @@
 package com.example.ezyardfrontend
 
 import android.content.Context
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -15,12 +12,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -46,7 +41,6 @@ import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ProfileScreen(navController: NavHostController) {
     val sharedPreferences = LocalContext.current.getSharedPreferences("auth", Context.MODE_PRIVATE)
@@ -89,7 +83,6 @@ fun ProfileScreen(navController: NavHostController) {
                     isLoadingListings = false
                 }
             )
-
         } else {
             userToken = sharedPreferences.getString("userToken", null)
             if (userToken == null) {
@@ -97,6 +90,7 @@ fun ProfileScreen(navController: NavHostController) {
             }
         }
     }
+
     Box(modifier = Modifier.fillMaxSize()) {
         // Sign Out button at the top-right corner
         Button(
@@ -122,25 +116,26 @@ fun ProfileScreen(navController: NavHostController) {
             .padding(bottom = 128.dp), // Add padding for navigation bar
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(80.dp)) // Lower the logo and welcome section
+        Spacer(modifier = Modifier.height(60.dp)) // Lower the entire section
 
         // Top Section with centered content
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.wrapContentHeight()
         ) {
+            // Increase the logo size
             Image(
                 painter = painterResource(id = R.drawable.ezyard),
                 contentDescription = "Profile image",
                 modifier = Modifier
-                    .size(150.dp)
-                    .padding(bottom = 16.dp)
+                    .size(275.dp) // Increased logo size
+                    .padding(bottom = 24.dp) // Increase padding between logo and text
             )
             if (user != null || userToken != null) {
                 Text(
                     text = "Welcome, ${user?.email ?: "User"}!",
                     style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.padding(bottom = 8.dp),
+                    modifier = Modifier.padding(bottom = 16.dp),
                     textAlign = TextAlign.Center
                 )
                 Text(
@@ -159,7 +154,7 @@ fun ProfileScreen(navController: NavHostController) {
                 )
             }
         }
-        Spacer(modifier = Modifier.height(150.dp))
+        Spacer(modifier = Modifier.height(125.dp))
 
         // Bottom Section - Buttons
         Column(
@@ -170,13 +165,13 @@ fun ProfileScreen(navController: NavHostController) {
                 onClick = { navController.navigate("YourListingsScreen") },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(text = "Your Listings")
+                Text(text = "My Listings")
             }
             Button(
                 onClick = { navController.navigate("BookmarkedListingsScreen") },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(text = "Your Bookmarked Listings")
+                Text(text = "Bookmarked Listings")
             }
             Button(
                 onClick = { navController.navigate("CreateListingScreen") },
@@ -225,6 +220,3 @@ fun ProfileScreen(navController: NavHostController) {
         )
     }
 }
-
-
-
