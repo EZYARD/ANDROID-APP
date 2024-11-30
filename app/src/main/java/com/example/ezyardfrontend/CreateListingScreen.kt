@@ -3,16 +3,29 @@ package com.example.ezyardfrontend
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
@@ -34,10 +47,16 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import coil3.compose.rememberAsyncImagePainter
 import com.example.ezyardfrontend.BackendWrapper.Companion.createListing
+import com.example.ezyardfrontend.BackendWrapper.Companion.getFilePathFromUri
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
@@ -66,6 +85,7 @@ fun CreateListingScreen(navController: NavHostController) {
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    var newImages by remember { mutableStateOf<List<String>>(emptyList()) }
 
     Scaffold(
         topBar = {
@@ -87,12 +107,20 @@ fun CreateListingScreen(navController: NavHostController) {
                 .fillMaxWidth()
         ) {
             item {
+                UploadImageSection(
+                    navController = navController,
+                    newImages = newImages,
+                    onAddImage = { newPaths -> newImages = newImages + newPaths },
+                    onRemoveImage = { imagePath -> newImages = newImages - imagePath }
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+
                 ListingTextField(label = "Name", value = name, onValueChange = { name = it })
                 ListingTextField(label = "Description", value = description, onValueChange = { description = it })
                 ListingTextField(label = "City", value = city, onValueChange = { city = it })
                 ListingTextField(label = "State", value = state, onValueChange = { state = it })
                 ListingTextField(label = "Street", value = street, onValueChange = { street = it })
-                ListingTextField(label = "Street Number", value = streetNumber, onValueChange = { streetNumber = it })
+                ListingTextField(label = "Street Number", value = streetNumber, onValueChange = { streetNumber = it }, keyboardType = KeyboardType.Number)
                 ListingTextField(label = "Zip Code", value = zipcode, onValueChange = { zipcode = it }, keyboardType = KeyboardType.Number)
                 ListingTextField(label = "Price Range", value = priceRange, onValueChange = { priceRange = it }, keyboardType = KeyboardType.Number)
 
@@ -231,3 +259,94 @@ fun CreateListingScreen(navController: NavHostController) {
         )
     }
 }
+
+@Composable
+fun UploadImageSection(
+    //listingId: Int,
+    navController: NavHostController,
+    newImages: List<String>,
+    onAddImage: (List<String>) -> Unit,
+    onRemoveImage: (String) -> Unit
+) {
+
+    val context = LocalContext.current
+    var listingImages by remember { mutableStateOf<List<String>>(emptyList()) }
+    var uploadMessage by remember { mutableStateOf<String?>(null) }
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetMultipleContents()
+    ) { uris ->
+        val newPaths = uris.mapNotNull { uri -> getFilePathFromUri(context, uri) }
+        onAddImage(newPaths)
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, MaterialTheme.colorScheme.inverseSurface, RoundedCornerShape(8.dp))
+            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(16.dp))
+            .padding(8.dp)
+    ) {
+        Text(
+            text = "Images",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+
+        if (listingImages.isNotEmpty() || newImages.isNotEmpty()) {
+            LazyRow(
+                modifier = Modifier.fillMaxWidth().height(250.dp)
+            ) {
+                // Display new images (added by user)
+                items(newImages) { imagePath ->
+                    Box(
+                        modifier = Modifier.padding(4.dp).fillMaxHeight().width(300.dp),
+                        contentAlignment = Alignment.TopEnd
+                    ) {
+                        Image(
+                            painter = rememberAsyncImagePainter(imagePath),
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(8.dp)),
+                            contentScale = ContentScale.Crop
+                        )
+                        IconButton(
+                            onClick = {
+                                onRemoveImage(imagePath)
+                            },
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .background(Color.White.copy(alpha = 0.7f), RoundedCornerShape(50))
+                                .padding(2.dp)
+                        ) {
+                            Icon(Icons.Default.Close, contentDescription = "Remove New Image")
+                        }
+                    }
+                }
+            }
+        } else {
+            Box(
+                modifier = Modifier.fillMaxWidth().height(250.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = "No images added")
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(onClick = { launcher.launch("image/*") }) {
+            Text("Add Images")
+        }
+
+        uploadMessage?.let { message ->
+            Text(
+                text = message,
+                color = Color.Red,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+        }
+    }
+}
+
