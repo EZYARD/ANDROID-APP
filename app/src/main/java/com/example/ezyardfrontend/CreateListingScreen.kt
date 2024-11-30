@@ -40,6 +40,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -56,12 +57,21 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil3.compose.rememberAsyncImagePainter
 import com.example.ezyardfrontend.BackendWrapper.Companion.createListing
+import com.example.ezyardfrontend.BackendWrapper.Companion.getBookmarkedListings
 import com.example.ezyardfrontend.BackendWrapper.Companion.getFilePathFromUri
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
+
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
+
+private var imageListingId: Int = 0
+private val user = Firebase.auth.currentUser
+private var uid = ""
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,6 +91,7 @@ fun CreateListingScreen(navController: NavHostController) {
     var endDateTime by remember { mutableStateOf<LocalDateTime?>(null) }
 
     val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+    val visualDateFormatter = DateTimeFormatter.ofPattern("EEEE, MMM d h:mm a")
     val calendar = Calendar.getInstance()
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -108,7 +119,6 @@ fun CreateListingScreen(navController: NavHostController) {
         ) {
             item {
                 UploadImageSection(
-                    navController = navController,
                     newImages = newImages,
                     onAddImage = { newPaths -> newImages = newImages + newPaths },
                     onRemoveImage = { imagePath -> newImages = newImages - imagePath }
@@ -141,7 +151,7 @@ fun CreateListingScreen(navController: NavHostController) {
                 }
                 startDateTime?.let {
                     Text(
-                        "Start: ${it.format(dateFormatter)}",
+                        "Start: ${it.format(visualDateFormatter)}",
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(start = 8.dp)
                     )
@@ -162,7 +172,7 @@ fun CreateListingScreen(navController: NavHostController) {
                 }
                 endDateTime?.let {
                     Text(
-                        "End: ${it.format(dateFormatter)}",
+                        "End: ${it.format(visualDateFormatter)}",
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(start = 8.dp)
                     )
@@ -185,6 +195,13 @@ fun CreateListingScreen(navController: NavHostController) {
                             state.isNotEmpty() && zipcode.isNotEmpty() && description.isNotEmpty() && startDateTime != null &&
                             endDateTime != null && selectedTags.isNotEmpty() && priceRange.isNotEmpty())
                         {
+                            if(newImages.isEmpty())
+                            {
+                                scope.launch {
+                                    snackbarHostState.showSnackbar("You must have at least one image!")
+                                }
+                                return@Button
+                            }
                             val listing = ListingCreateRequest(
                                 name = name,
                                 streetNumber = streetNumber.toInt(),
@@ -206,11 +223,19 @@ fun CreateListingScreen(navController: NavHostController) {
                                     createListing(
                                         idToken = userToken!!,
                                         listingRequest = listing,
-                                        onSuccess = { println("Listing created") },
+                                        onSuccess = {
+                                            scope.launch {
+                                                snackbarHostState.showSnackbar("Listing created successfully!")
+                                                initiateImageUpload(
+                                                    navController = navController,
+                                                    newImages = newImages
+                                                )
+                                            }
+                                        },
                                         onError = { println("Error creating listing") }
                                     )
                                     // Navigate to ProfileScreen
-                                    navController.navigate("ListingsScreen")
+                                    //navController.navigate("ListingsScreen")
                                 } else {
                                     // Do nothing
                                 }
@@ -262,8 +287,6 @@ fun CreateListingScreen(navController: NavHostController) {
 
 @Composable
 fun UploadImageSection(
-    //listingId: Int,
-    navController: NavHostController,
     newImages: List<String>,
     onAddImage: (List<String>) -> Unit,
     onRemoveImage: (String) -> Unit
@@ -350,3 +373,42 @@ fun UploadImageSection(
     }
 }
 
+
+fun initiateImageUpload(
+    navController: NavHostController,
+    newImages: List<String>
+) {
+    var userListings: List<ListingComponent> = emptyList()
+
+    if (user != null) {
+        uid = user.uid
+
+        BackendWrapper.getListings(
+            onSuccess = { listings ->
+                userListings = listings.filter { it.uid == uid }
+                val targetListing = userListings.maxByOrNull { it.id }
+                if (targetListing != null) {
+                    imageListingId = targetListing.id
+                }
+                newImages.forEach { imagePath ->
+                    BackendWrapper.uploadListingImage(
+                        listingId = imageListingId,
+                        filePath = imagePath,
+                        onSuccess = {
+                            println("SUCCESS")
+                            navController.popBackStack()
+
+                        },
+                        onError = {
+                            println("FAIL")
+
+                        }
+                    )
+                }
+            },
+            onError = {
+                println("ERROR")
+            }
+        )
+    }
+}
