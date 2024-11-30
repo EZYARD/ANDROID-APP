@@ -133,6 +133,13 @@ fun MainApp() {
             composable("ForgotPasswordScreen") {
                 ForgotPasswordScreen(navController = navController)
             }
+            composable("YourListingsScreen") {
+                YourListingsScreen(navController = navController)
+            }
+            composable("BookmarkedListingsScreen") {
+                BookmarkedListingsScreen(navController = navController)
+            }
+
             composable("MapScreen") {
                 MapScreen()
             }

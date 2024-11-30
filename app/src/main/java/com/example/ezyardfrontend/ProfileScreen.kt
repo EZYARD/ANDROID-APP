@@ -97,6 +97,21 @@ fun ProfileScreen(navController: NavHostController) {
             }
         }
     }
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Sign Out button at the top-right corner
+        Button(
+            onClick = {
+                Firebase.auth.signOut()
+                sharedPreferences.edit().remove("userToken").apply()
+                navController.navigate("LoginScreen")
+            },
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(16.dp)
+        ) {
+            Text(text = "Sign Out")
+        }
+    }
 
     // Make the entire screen scrollable
     Column(
@@ -144,53 +159,7 @@ fun ProfileScreen(navController: NavHostController) {
                 )
             }
         }
-
-        // Listings Section
-        Text(
-            text = "Your Listings",
-            style = MaterialTheme.typography.headlineSmall,
-            modifier = Modifier.padding(vertical = 16.dp)
-        )
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color.LightGray, shape = RoundedCornerShape(8.dp))
-                .padding(8.dp)
-        ) {
-            when {
-                isLoadingListings -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                }
-
-                userListings.isEmpty() -> {
-                    Text(
-                        text = "Your listings will be displayed here when created.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.align(Alignment.Center),
-                        color = Color.Gray
-                    )
-                }
-
-                else -> {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp)
-                    ) {
-                        userListings.forEach { listing ->
-                            Listings(
-                                listing = listing,
-                                navController = navController,
-                                distance = null,
-                                isAccountPage = true
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp)) // Space between listings and buttons
+        Spacer(modifier = Modifier.height(150.dp))
 
         // Bottom Section - Buttons
         Column(
@@ -198,16 +167,17 @@ fun ProfileScreen(navController: NavHostController) {
             modifier = Modifier.fillMaxWidth()
         ) {
             Button(
-                onClick = {
-                    Firebase.auth.signOut()
-                    sharedPreferences.edit().remove("userToken").apply()
-                    navController.navigate("LoginScreen")
-                },
+                onClick = { navController.navigate("YourListingsScreen") },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(text = "Sign Out")
+                Text(text = "Your Listings")
             }
-            Spacer(modifier = Modifier.height(12.dp))
+            Button(
+                onClick = { navController.navigate("BookmarkedListingsScreen") },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(text = "Your Bookmarked Listings")
+            }
             Button(
                 onClick = { navController.navigate("CreateListingScreen") },
                 modifier = Modifier.fillMaxWidth()
