@@ -261,19 +261,20 @@ fun Listings(
                 }
             }
         }
-        Spacer(modifier = Modifier.height(8.dp))
+        //Spacer(modifier = Modifier.height(8.dp))
 
         // Display listing details as text below the image
-        Text(text = "Name: ${listing.name}", style = MaterialTheme.typography.bodyMedium)
+        Text(text = "  Name: ${listing.name}", style = MaterialTheme.typography.bodyMedium)
         distance?.let {
             Text(
                 text = "Distance: ${"%.2f".format(it)} miles away",
                 style = MaterialTheme.typography.bodyMedium
             )
         }
-        Text(text = "City: ${listing.city}, ${listing.state}")
-        Text(text = "Street: ${listing.streetNumber} ${listing.streetName}, ${listing.zipcode}")
-        Text(text = "Price Range: ${listing.priceRange}")
+        Text(text = "  City: ${listing.city}, ${listing.state}")
+        Text(text = "  Street: ${listing.streetNumber} ${listing.streetName}, ${listing.zipcode}")
+        Text(text = "  Price Range: ${listing.priceRange}")
+        Spacer(modifier = Modifier.height(6.dp))
     }
 
 
