@@ -67,6 +67,17 @@ data class BookmarkList (
     val bookmarked_listings: List<Int>
 )
 
+data class Review(
+    val id: Int,
+    val uid: String,
+    val review: String,
+)
+
+data class CreateReviewRequest(
+    val listing_id: Int,
+    val review: String
+)
+
 // Interface to define API endpoints for Retrofit
 interface BackendSchema {
 
@@ -135,5 +146,14 @@ interface BackendSchema {
         @Path("image_id") imageId: Int
     ): Call<Void>
 
+    @POST("reviews/create")
+    fun createReview(
+        @Header("Authorization") authHeader: String,
+        @Body createReviewRequest: CreateReviewRequest
+    ): Call<Void>
 
+    @GET("reviews/{listing_id}")
+    fun reviews(
+        @Path("listing_id") listingId: Int,
+    ): Call<List<Review>>
 }
