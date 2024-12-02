@@ -232,12 +232,18 @@ fun CreateListingScreen(navController: NavHostController) {
                                                 )
                                             }
                                         },
-                                        onError = { println("Error creating listing") }
+                                        onError = {
+                                            scope.launch {
+                                                snackbarHostState.showSnackbar("Error Creating Listing!")
+                                            }
+                                        }
                                     )
                                     // Navigate to ProfileScreen
                                     //navController.navigate("ListingsScreen")
                                 } else {
-                                    // Do nothing
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar("Error Creating Listing!")
+                                    }
                                 }
                             }
                         } else {
