@@ -267,7 +267,7 @@ fun Listings(
         Text(text = "  Name: ${listing.name}", style = MaterialTheme.typography.bodyMedium)
         distance?.let {
             Text(
-                text = "Distance: ${"%.2f".format(it)} miles away",
+                text = "  Distance: ${"%.2f".format(it)} miles away",
                 style = MaterialTheme.typography.bodyMedium
             )
         }

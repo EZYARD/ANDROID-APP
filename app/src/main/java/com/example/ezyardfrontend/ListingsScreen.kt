@@ -204,7 +204,7 @@ fun LocationSelector(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onLocationClick() }
-            .border(1.dp, Color.Gray, shape = RectangleShape)
+            .border(0.dp, Color.Gray, shape = RectangleShape)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
