@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import coil3.compose.rememberAsyncImagePainter
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -57,11 +58,13 @@ fun OwnerListingScreen(listing: ListingComponent, navController: NavHostControll
     var imageUrls by remember { mutableStateOf<List<String>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-
+    var reviews by remember { mutableStateOf<List<Review>>(emptyList()) }
+    var newReviewText by remember { mutableStateOf("") }
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(listing.id) {
         coroutineScope.launch {
+            // Fetch images
             BackendWrapper.getImageUrlsForListing(
                 listing.id,
                 onSuccess = { urls ->
@@ -73,8 +76,25 @@ fun OwnerListingScreen(listing: ListingComponent, navController: NavHostControll
                     isLoading = false
                 }
             )
+
+            // Fetch reviews with error handling for empty or missing reviews
+            BackendWrapper.getReviews(
+                listing.id,
+                onSuccess = { fetchedReviews ->
+                    reviews = fetchedReviews
+                },
+                onError = { error ->
+                    // Handle specific error for no reviews differently
+                    if (error.contains("No reviews found", ignoreCase = true)) {
+                        reviews = emptyList() // Treat as no reviews rather than an error
+                    } else {
+                        errorMessage = error // Display other errors
+                    }
+                }
+            )
         }
     }
+
 
     Scaffold(
         topBar = {
@@ -216,6 +236,75 @@ fun OwnerListingScreen(listing: ListingComponent, navController: NavHostControll
                     fontSize = 18.sp,
                     style = MaterialTheme.typography.bodyMedium
                 )
+
+                // Reviews Section
+                Text(
+                    text = "Reviews",
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                if (reviews.isNotEmpty()) {
+                    reviews.forEach { review ->
+                        Text(
+                            text = "${review.uid}: ${review.review}",
+                            fontSize = 18.sp,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+                    }
+                } else {
+                    Text(
+                        text = "No reviews available",
+                        fontSize = 18.sp,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+
+                androidx.compose.material3.TextField(
+                    value = newReviewText,
+                    onValueChange = { newReviewText = it },
+                    placeholder = { Text("Write your review...") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                androidx.compose.material3.Button(
+                    onClick = {
+                        coroutineScope.launch {
+                            val mUser = FirebaseAuth.getInstance().currentUser
+                            mUser?.getIdToken(true)?.addOnCompleteListener { task ->
+                                if (task.isSuccessful) {
+                                    val token = task.result?.token
+                                    if (token != null) {
+                                        BackendWrapper.createReview(
+                                            idToken = token, // Replace with actual ID token
+                                            listingId = listing.id,
+                                            review = newReviewText,
+                                            onSuccess = {
+                                                reviews = reviews + Review(
+                                                    id = reviews.size + 1,
+                                                    uid = "YourUserId",
+                                                    review = newReviewText
+                                                )
+                                                newReviewText = ""
+                                            },
+                                            onError = { error ->
+                                                errorMessage = error
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    modifier = Modifier.align(Alignment.End)
+                ) {
+                    Text("Submit")
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
+
+
             }
         }
     }

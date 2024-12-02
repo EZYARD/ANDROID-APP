@@ -307,5 +307,49 @@ class BackendWrapper {
                 }
             })
         }
+
+        fun createReview(
+            idToken: String,
+            listingId: Int,
+            review: String,
+            onSuccess: () -> Unit,
+            onError: (String) -> Unit
+        ) {
+            val request = CreateReviewRequest(listingId, review)
+            RetrofitInstance.api.createReview("Bearer $idToken", request).enqueue(object : Callback<Void> {
+                override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                    if (response.isSuccessful) {
+                        onSuccess()
+                    } else {
+                        onError("Failed to create review: ${response.errorBody()?.string()}")
+                    }
+                }
+
+                override fun onFailure(call: Call<Void>, t: Throwable) {
+                    onError("Network error: ${t.message}")
+                }
+            })
+        }
+
+        fun getReviews(
+            listingId: Int,
+            onSuccess: (List<Review>) -> Unit,
+            onError: (String) -> Unit
+        ) {
+            RetrofitInstance.api.reviews(listingId).enqueue(object : Callback<List<Review>> {
+                override fun onResponse(call: Call<List<Review>>, response: Response<List<Review>>) {
+                    if (response.isSuccessful) {
+                        response.body()?.let { onSuccess(it) } ?: onError("No reviews found")
+                    } else {
+                        onError("Failed to fetch reviews: ${response.errorBody()?.string()}")
+                    }
+                }
+
+                override fun onFailure(call: Call<List<Review>>, t: Throwable) {
+                    onError("Network error: ${t.message}")
+                }
+            })
+        }
+
     }
 }

@@ -27,7 +27,7 @@ fun MapScreen() {
     LaunchedEffect(Unit) {
         BackendWrapper.getListings(
             onSuccess = { backendListings ->
-                listings = backendListings
+                listings = backendListings.filter { listing -> listing.latitude != null && listing.longitude != null }
                 isLoading = false
             },
             onError = { error ->
@@ -45,7 +45,8 @@ fun MapScreen() {
                 top = 64.dp,
                 bottom = 128.dp,
                 start = 16.dp, // Left-Right
-                end = 16.dp)
+                end = 16.dp
+            )
     ) {
         YardSaleMap(
             userLocation = userLocation,
