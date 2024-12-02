@@ -283,7 +283,7 @@ fun CategoryFilter(
             .fillMaxWidth()
             .border(1.dp, Color.Gray, shape = RectangleShape)
             .clickable { onToggleExpanded() }
-            .padding(20.dp)
+            .padding(16.dp)
     ) {
         Text(text = summaryText, color = Color.Black)
         Icon(
