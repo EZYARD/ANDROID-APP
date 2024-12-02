@@ -264,16 +264,16 @@ fun Listings(
         //Spacer(modifier = Modifier.height(8.dp))
 
         // Display listing details as text below the image
-        Text(text = "  Name: ${listing.name}", style = MaterialTheme.typography.bodyMedium)
+        Text(text = "  ${listing.name}", style = MaterialTheme.typography.bodyLarge)
         distance?.let {
             Text(
-                text = "  Distance: ${"%.2f".format(it)} miles away",
-                style = MaterialTheme.typography.bodyMedium
+                text = "  ${"%.2f".format(it)} miles away",
+                style = MaterialTheme.typography.bodyLarge
             )
         }
-        Text(text = "  City: ${listing.city}, ${listing.state}")
-        Text(text = "  Street: ${listing.streetNumber} ${listing.streetName}, ${listing.zipcode}")
-        Text(text = "  Price Range: ${listing.priceRange}")
+        Text(text = "  ${listing.city}, ${listing.state}", style = MaterialTheme.typography.bodyLarge)
+        Text(text = "  ${listing.streetNumber} ${listing.streetName}, ${listing.zipcode}", style = MaterialTheme.typography.bodyLarge)
+        Text(text = "  Price Range: ${listing.priceRange}", style = MaterialTheme.typography.bodyLarge)
         Spacer(modifier = Modifier.height(8.dp))
     }
 

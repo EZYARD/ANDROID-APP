@@ -277,7 +277,7 @@ fun CategoryFilter(
     } else {
         "${selectedCategories.size} Categories Selected"
     }
-g
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
