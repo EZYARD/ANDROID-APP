@@ -131,15 +131,7 @@ fun CreateListingScreen(navController: NavHostController) {
                 ListingTextField(label = "State", value = state, onValueChange = { state = it })
                 ListingTextField(label = "Street", value = street, onValueChange = { street = it })
                 ListingTextField(label = "Street Number", value = streetNumber, onValueChange = { streetNumber = it }, keyboardType = KeyboardType.Number)
-                ListingTextField(
-                    label = "Zip Code",
-                    value = zipcode,
-                    onValueChange = {
-                        if (it.length <= 5 && it.all { char -> char.isDigit() })
-                        {
-                            zipcode = it
-                        } },
-                    keyboardType = KeyboardType.Number)
+                ListingTextField(label = "Zip Code", value = zipcode, onValueChange = { zipcode = it }, keyboardType = KeyboardType.Number)
                 ListingTextField(label = "Price Range", value = priceRange, onValueChange = { priceRange = it }, keyboardType = KeyboardType.Number)
 
                 Spacer(modifier = Modifier.height(16.dp))
