@@ -276,7 +276,5 @@ fun Listings(
         Text(text = "  Price Range: ${listing.priceRange}")
         Spacer(modifier = Modifier.height(6.dp))
     }
-
-
 //            Text("Bookmarked${bookmarks.toList().toString()}")
 }
