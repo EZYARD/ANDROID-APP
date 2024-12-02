@@ -273,11 +273,11 @@ fun CategoryFilter(
     onCategorySelected: (Set<String>) -> Unit, isExpanded: Boolean, onToggleExpanded: () -> Unit
 ) {
     val summaryText = if (selectedCategories.isEmpty()) {
-        "Filter by Categories"
+        "         Filter by Categories"
     } else {
         "${selectedCategories.size} Categories Selected"
     }
-
+g
     Box(
         modifier = Modifier
             .fillMaxWidth()
