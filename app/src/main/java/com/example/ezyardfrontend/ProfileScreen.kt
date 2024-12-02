@@ -1,10 +1,7 @@
 package com.example.ezyardfrontend
 
 import android.content.Context
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -15,12 +12,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -46,7 +41,8 @@ import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
-@RequiresApi(Build.VERSION_CODES.O)
+
+
 @Composable
 fun ProfileScreen(navController: NavHostController) {
     val sharedPreferences = LocalContext.current.getSharedPreferences("auth", Context.MODE_PRIVATE)
@@ -89,7 +85,6 @@ fun ProfileScreen(navController: NavHostController) {
                     isLoadingListings = false
                 }
             )
-
         } else {
             userToken = sharedPreferences.getString("userToken", null)
             if (userToken == null) {
@@ -107,25 +102,26 @@ fun ProfileScreen(navController: NavHostController) {
             .padding(bottom = 128.dp), // Add padding for navigation bar
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(80.dp)) // Lower the logo and welcome section
+        Spacer(modifier = Modifier.height(60.dp)) // Lower the entire section
 
         // Top Section with centered content
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.wrapContentHeight()
         ) {
+            // Increase the logo size
             Image(
                 painter = painterResource(id = R.drawable.ezyard),
                 contentDescription = "Profile image",
                 modifier = Modifier
-                    .size(150.dp)
-                    .padding(bottom = 16.dp)
+                    .size(275.dp) // Increased logo size
+                    .padding(bottom = 24.dp) // Increase padding between logo and text
             )
             if (user != null || userToken != null) {
                 Text(
                     text = "Welcome, ${user?.email ?: "User"}!",
                     style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.padding(bottom = 8.dp),
+                    modifier = Modifier.padding(bottom = 16.dp),
                     textAlign = TextAlign.Center
                 )
                 Text(
@@ -144,59 +140,31 @@ fun ProfileScreen(navController: NavHostController) {
                 )
             }
         }
-
-        // Listings Section
-        Text(
-            text = "Your Listings",
-            style = MaterialTheme.typography.headlineSmall,
-            modifier = Modifier.padding(vertical = 16.dp)
-        )
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color.LightGray, shape = RoundedCornerShape(8.dp))
-                .padding(8.dp)
-        ) {
-            when {
-                isLoadingListings -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                }
-
-                userListings.isEmpty() -> {
-                    Text(
-                        text = "Your listings will be displayed here when created.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.align(Alignment.Center),
-                        color = Color.Gray
-                    )
-                }
-
-                else -> {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp)
-                    ) {
-                        userListings.forEach { listing ->
-                            Listings(
-                                listing = listing,
-                                navController = navController,
-                                distance = null,
-                                isAccountPage = true
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp)) // Space between listings and buttons
+        Spacer(modifier = Modifier.height(75.dp))
 
         // Bottom Section - Buttons
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth()
         ) {
+            Button(
+                onClick = { navController.navigate("YourListingsScreen") },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(text = "My Listings")
+            }
+            Button(
+                onClick = { navController.navigate("BookmarkedListingsScreen") },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(text = "Bookmarked Listings")
+            }
+            Button(
+                onClick = { navController.navigate("CreateListingScreen") },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(text = "Create a Listing")
+            }
             Button(
                 onClick = {
                     Firebase.auth.signOut()
@@ -207,13 +175,7 @@ fun ProfileScreen(navController: NavHostController) {
             ) {
                 Text(text = "Sign Out")
             }
-            Spacer(modifier = Modifier.height(12.dp))
-            Button(
-                onClick = { navController.navigate("CreateListingScreen") },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(text = "Create a Listing")
-            }
+
             Spacer(modifier = Modifier.height(12.dp))
             Button(
                 onClick = { showDeleteConfirmation = true },
@@ -255,6 +217,3 @@ fun ProfileScreen(navController: NavHostController) {
         )
     }
 }
-
-
-
