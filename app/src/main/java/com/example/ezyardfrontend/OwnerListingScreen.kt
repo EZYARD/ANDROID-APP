@@ -282,7 +282,7 @@ fun OwnerListingScreen(listing: ListingComponent, navController: NavHostControll
                                             onSuccess = {
                                                 reviews = reviews + Review(
                                                     id = reviews.size + 1,
-                                                    uid = "YourUserId",
+                                                    uid = mUser.uid,
                                                     review = newReviewText
                                                 )
                                                 newReviewText = ""
