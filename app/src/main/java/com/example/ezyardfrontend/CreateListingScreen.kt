@@ -58,7 +58,7 @@ fun CreateListingScreen(navController: NavHostController) {
     var startDateTime by remember { mutableStateOf<LocalDateTime?>(null) }
     var endDateTime by remember { mutableStateOf<LocalDateTime?>(null) }
 
-    val dateFormatter = DateTimeFormatter.ofPattern("EEEE, MMM d h:mm a")
+    val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
     val calendar = Calendar.getInstance()
 
     Scaffold(
@@ -81,22 +81,15 @@ fun CreateListingScreen(navController: NavHostController) {
         ) {
             item {
                 ListingTextField(label = "Name", value = name, onValueChange = { name = it })
+                ListingTextField(label = "Description", value = description, onValueChange = { description = it })
                 ListingTextField(label = "City", value = city, onValueChange = { city = it })
                 ListingTextField(label = "State", value = state, onValueChange = { state = it })
                 ListingTextField(label = "Street", value = street, onValueChange = { street = it })
                 ListingTextField(label = "Street Number", value = streetNumber, onValueChange = { streetNumber = it })
                 ListingTextField(label = "Zip Code", value = zipcode, onValueChange = { zipcode = it }, keyboardType = KeyboardType.Number)
-                ListingTextField(label = "Description", value = description, onValueChange = { description = it })
                 ListingTextField(label = "Price Range", value = priceRange, onValueChange = { priceRange = it }, keyboardType = KeyboardType.Number)
 
-                TextButton(onClick = { showTagDialog = true }) {
-                    Text("Add Tags")
-                }
-                Text(
-                    "Selected Tags: ${selectedTags.joinToString(", ")}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(start = 8.dp)
-                )
+                Spacer(modifier = Modifier.height(16.dp))
 
                 // Enhanced Start Date/Time Picker
                 Button(
@@ -141,6 +134,15 @@ fun CreateListingScreen(navController: NavHostController) {
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
+
+                TextButton(onClick = { showTagDialog = true }) {
+                    Text("Add Tags")
+                }
+                Text(
+                    "Selected Tags: ${selectedTags.joinToString(", ")}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
 
                 Button(
                     onClick = {
