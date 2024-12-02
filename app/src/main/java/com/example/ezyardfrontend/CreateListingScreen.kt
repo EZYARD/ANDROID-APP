@@ -402,7 +402,7 @@ fun initiateImageUpload(
                         filePath = imagePath,
                         onSuccess = {
                             println("SUCCESS")
-                            navController.popBackStack()
+                            navController.navigate("ProfileScreen")
 
                         },
                         onError = {
