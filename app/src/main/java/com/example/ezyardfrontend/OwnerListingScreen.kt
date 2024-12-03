@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -60,6 +61,7 @@ fun OwnerListingScreen(listing: ListingComponent, navController: NavHostControll
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var reviews by remember { mutableStateOf<List<Review>>(emptyList()) }
     var newReviewText by remember { mutableStateOf("") }
+    var selectedImageUrl by remember { mutableStateOf<String?>(null) }
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(listing.id) {
@@ -149,7 +151,9 @@ fun OwnerListingScreen(listing: ListingComponent, navController: NavHostControll
                                 modifier = Modifier
                                     .padding(4.dp)
                                     .fillMaxHeight()
-                                    .width(300.dp),
+                                    .width(300.dp)
+                                    .clip(MaterialTheme.shapes.medium)
+                                    .clickable { selectedImageUrl = imageUrl },
                                 contentAlignment = Alignment.Center
                             ) {
                                 Image(
@@ -178,6 +182,28 @@ fun OwnerListingScreen(listing: ListingComponent, navController: NavHostControll
                         Text(text = "No images available")
                     }
                 }
+                // Image Dialog
+                if (selectedImageUrl != null) {
+                    androidx.compose.material3.AlertDialog(
+                        onDismissRequest = { selectedImageUrl = null }, // Close dialog on dismiss
+                        text = {
+                            Image(
+                                painter = rememberAsyncImagePainter(selectedImageUrl), // Display selected image
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .fillMaxHeight(0.8f), // Fit image within dialog
+                                contentScale = ContentScale.Fit
+                            )
+                        },
+                        confirmButton = {
+                            androidx.compose.material3.TextButton(onClick = { selectedImageUrl = null }) { // Close button
+                                Text("Close")
+                            }
+                        }
+                    )
+                }
+
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -303,6 +329,7 @@ fun OwnerListingScreen(listing: ListingComponent, navController: NavHostControll
 
                 Spacer(modifier = Modifier.height(16.dp))
                 Spacer(modifier = Modifier.height(16.dp))
+
 
 
             }
