@@ -276,7 +276,5 @@ fun Listings(
         Text(text = "  Price Range: ${listing.priceRange}", style = MaterialTheme.typography.bodyLarge)
         Spacer(modifier = Modifier.height(8.dp))
     }
-
-
 //            Text("Bookmarked${bookmarks.toList().toString()}")
 }
