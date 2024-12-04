@@ -204,7 +204,7 @@ fun LocationSelector(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onLocationClick() }
-            .border(1.dp, Color.Gray, shape = RectangleShape)
+            .border(0.dp, Color.Gray, shape = RectangleShape)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -273,7 +273,7 @@ fun CategoryFilter(
     onCategorySelected: (Set<String>) -> Unit, isExpanded: Boolean, onToggleExpanded: () -> Unit
 ) {
     val summaryText = if (selectedCategories.isEmpty()) {
-        "Filter by Categories"
+        "         Filter by Categories"
     } else {
         "${selectedCategories.size} Categories Selected"
     }
@@ -283,7 +283,7 @@ fun CategoryFilter(
             .fillMaxWidth()
             .border(1.dp, Color.Gray, shape = RectangleShape)
             .clickable { onToggleExpanded() }
-            .padding(20.dp)
+            .padding(16.dp)
     ) {
         Text(text = summaryText, color = Color.Black)
         Icon(
